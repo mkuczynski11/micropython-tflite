@@ -12,7 +12,7 @@ cd esp-idf
 ./install.sh
 . ./export.sh
 cd ../micropython/ports/esp32
-make USER_C_MODULES=modules/micropython.cmake BOARD=ESP32_CAM
+make USER_C_MODULES=`full_path_to_cloned_repo`/modules/micropython.cmake BOARD=ESP32_CAM
 ```
 
 *NOTE: This guide is made for ESP32-CAM AI-THINKER module. Trying to build firmware intended for other modules should work provided following the correct [micropython](https://github.com/micropython/micropython) guide.*

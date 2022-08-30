@@ -1,12 +1,12 @@
-[submodule "esp-idf"]
-	path = esp-idf
-	url = https://github.com/espressif/esp-idf.git
 [submodule "camera-driver"]
 	path = camera-driver
 	url = https://github.com/lemariva/micropython-camera-driver.git
-[submodule "micropython"]
-	path = micropython
-	url = https://github.com/micropython/micropython
 [submodule "st7789"]
 	path = st7789
 	url = https://github.com/russhughes/st7789_mpy.git
+[submodule "esp-idf"]
+	path = esp-idf
+	url = https://github.com/mkuczynski11/esp-idf.git
+[submodule "micropython"]
+	path = micropython
+	url = https://github.com/mkuczynski11/micropython.git
