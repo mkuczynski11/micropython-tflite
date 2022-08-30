@@ -17,4 +17,6 @@ cd ports/esp32
 make USER_C_MODULES=`full_path_to_cloned_repo`/modules/micropython.cmake BOARD=ESP32_CAM
 ```
 
+Successful build should generate `build-ESP32_CAM`in `micropython/ports/esp32` directory. Inside of it you can find firmware.bin which should contain all dependencies and after flashing it onto device you should be able to import `camera` and `st7789` libraries. 
+
 *NOTE: This guide is made for ESP32-CAM AI-THINKER module. Trying to build firmware intended for other modules should work provided following the correct [micropython](https://github.com/micropython/micropython) guide.*
