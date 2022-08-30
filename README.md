@@ -8,10 +8,12 @@
 
 ## Build firmware
 ```bash
+git submodule update --init --recursive
 cd esp-idf
 ./install.sh
 . ./export.sh
-cd ../micropython/ports/esp32
+cd ../micropython
+cd ports/esp32
 make USER_C_MODULES=`full_path_to_cloned_repo`/modules/micropython.cmake BOARD=ESP32_CAM
 ```
 
