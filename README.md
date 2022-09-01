@@ -2,19 +2,29 @@
 ## Project dependencies
 - [TFT screen driver](https://github.com/russhughes/st7789_mpy)
 - [Camera driver](https://github.com/lemariva/micropython-camera-driver)
-- [Espressif IoT Development Framework](https://github.com/espressif/esp-idf) - [`b64925c56`](https://github.com/espressif/esp-idf/commit/b64925c5673206100eaf4337d064d0fe3507eaec)
-- [Micropython](https://github.com/micropython/micropython) - [`feeeb5ea3`](https://github.com/micropython/micropython/commit/feeeb5ea3afe801b381eb5d4b310e83290634c46)
+- [Espressif IoT Development Framework](https://github.com/espressif/esp-idf) - release v4.2
+- [Micropython](https://github.com/micropython/micropython)
 - [ESP32-camera](https://github.com/espressif/esp32-camera) - [`093688e`](https://github.com/espressif/esp32-camera/commit/093688e0b3521ac982bc3d38bbf92059d97e3613)
 
-## Build firmware
+## DIY
 ```bash
-git submodule update --init --recursive
-cd esp-idf
+git clone -b v4.2 --recursive https://github.com/espressif/esp-idf.git
+git clone --recursive https://github.com/micropython/micropython.git
+git clone https://github.com/lemariva/micropython-camera-driver.git
+git clone https://github.com/russhughes/st7789_mpy.git
+cd esp-idf/components
+git clone https://github.com/espressif/esp32-camera
+cd esp32-camera
+git checkout 093688e
+cd ../../../micropython
+cp -r ../micropython-camera-driver/boards/ESP32_CAM/ ports/esp32/boards/ESP32_CAM
+cd mpy-cross/
+make
+cd ../../esp-idf
 ./install.sh
 . ./export.sh
-cd ../micropython
-cd ports/esp32
-make USER_C_MODULES=`full_path_to_cloned_repo`/modules/micropython.cmake BOARD=ESP32_CAM
+cd ../micropython/ports/esp32/
+make USER_C_MODULES=`full_path_to_cloned_repo`/micropython.cmake BOARD=ESP32_CAM
 ```
 
 Successful build should generate `build-ESP32_CAM`in `micropython/ports/esp32` directory. Inside of it you can find firmware.bin which should contain all dependencies and after flashing it onto device you should be able to import `camera` and `st7789` libraries. 
