@@ -24,7 +24,8 @@ cd ../../esp-idf
 ./install.sh
 . ./export.sh
 cd ../micropython/ports/esp32/
-make USER_C_MODULES=`full_path_to_cloned_repo`/micropython.cmake BOARD=ESP32_CAM
+cp ../../../st7789_mpy/fonts/bitmap/vga1_16x16.py modules # Optional: Adding font in order to display text
+make USER_C_MODULES=`full_path_to_cloned_repo`/micropython.cmake BOARD=ESP32_CAM FROZEN_MANIFEST="" FROZEN_MPY_DIR=$UPYDIR/modules
 ```
 
 Successful build should generate `build-ESP32_CAM`in `micropython/ports/esp32` directory. Inside of it you can find firmware.bin which should contain all dependencies and after flashing it onto device you should be able to import `camera` and `st7789` libraries. 
