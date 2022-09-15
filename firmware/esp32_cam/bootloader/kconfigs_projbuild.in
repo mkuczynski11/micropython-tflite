@@ -1,0 +1,3 @@
+source "/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/bootloader/Kconfig.projbuild"
+source "/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esptool_py/Kconfig.projbuild"
+source "/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/partition_table/Kconfig.projbuild"
