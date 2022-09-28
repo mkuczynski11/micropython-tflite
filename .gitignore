@@ -2,3 +2,5 @@ micropython
 micropython-camera-driver
 st7789_mpy
 esp-idf
+tensorflow-micropython-examples
+.venv

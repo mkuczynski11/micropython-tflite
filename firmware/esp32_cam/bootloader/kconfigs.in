@@ -1,0 +1,5 @@
+source "/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/efuse/Kconfig"
+source "/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esp32/Kconfig"
+source "/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esp_common/Kconfig"
+source "/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/log/Kconfig"
+source "/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/spi_flash/Kconfig"
