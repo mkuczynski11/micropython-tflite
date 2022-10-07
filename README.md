@@ -46,7 +46,7 @@ make
 cd ../../..
 rm -rf tensorflow-micropython-examples/micropython-modules/microlite/tensorflow-microlite.c
 rm -rf tensorflow-micropython-examples/micropython-modules/micropython-camera-driver/modcamera.c
-rm -rf tensorflow-micropython-examples/micropython-modules/micropython-camera-driver/micropython.cmake
+rm -rf tensorflow-micropython-examples/micropython-modules/micropython.cmake
 cp boards/esp32_cam/modcamera.c tensorflow-micropython-examples/micropython-modules/micropython-camera-driver/
 cp boards/esp32_cam/tensorflow-microlite.c tensorflow-micropython-examples/micropython-modules/microlite/
 cp boards/esp32_cam/micropython.cmake tensorflow-micropython-examples/micropython-modules/micropython.cmake

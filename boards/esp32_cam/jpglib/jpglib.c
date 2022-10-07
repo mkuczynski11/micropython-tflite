@@ -1,3 +1,16 @@
+#include <stdlib.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include "py/obj.h"
+#include "py/objstr.h"
+#include "py/objmodule.h"
+#include "py/runtime.h"
+#include "py/builtin.h"
+#include "py/mphal.h"
+#include "extmod/machine_spi.h"
+
+
 #include "mpfile.h"
 #include "tjpgd.h"
 
@@ -94,6 +107,9 @@ STATIC mp_obj_t jpglib_decompress_jpg(mp_obj_t name_param)
         // Prepare to decompress
 			res = jd_prepare(&jdec, in_func, work, 3100, &devid);
 			if (res == JDR_OK) {
+				width = jdec.width;
+				height = jdec.height;
+
                 // Initialize output device
 				devid.left	 = x;
 				devid.top	 = y;
@@ -117,7 +133,7 @@ STATIC mp_obj_t jpglib_decompress_jpg(mp_obj_t name_param)
             } else {
                 mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("jpg decompress failed."));
             }
-        mp.close(devid.fp);
+        mp_close(devid.fp);
     }
     m_free(work); // Discard work area
     mp_obj_t result[3] = {
@@ -134,7 +150,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(jpglib_decompress_jpg_obj, jpglib_decompress_jp
 STATIC const mp_map_elem_t jpglib_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_jpglib)},
     {MP_ROM_QSTR(MP_QSTR_decompress_jpg), (mp_obj_t) &jpglib_decompress_jpg_obj}
-}
+};
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_jpglib_globals, jpglib_module_globals_table);
 
