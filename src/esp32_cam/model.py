@@ -1,7 +1,11 @@
 from utils import dims_to_size, get_file_size
 import microlite
 mode = 1
+import jpglib
+import gc
 
+# TODO: Add logging and config validation
+# TODO: Add model reloading option
 class ModelExecutor:
     def __init__(self, model, model_config, input_callback=None, output_callback=None):
         self.model = model
@@ -18,9 +22,14 @@ class ModelExecutor:
         input_tensor = microlite_interpreter.getInputTensor(0)
         
         input_size = self.config.input_size
+        row_bytes = 240*3
+        model_width = self.config.width * 3
+        y_offset = (240 - self.config.height)//2 * row_bytes
+        x_offset = (row_bytes - model_width)//2 * model_width
         
         for i in range (0, input_size):
-            input_tensor.setValue(i, self.model.input_buffer[i])
+            buffer_index = ((x_offset) + i%model_width + (i//model_width)*row_bytes) + y_offset
+            input_tensor.setValue(i, self.model.input_buffer[buffer_index])
             
         print ("setup %d bytes on the inputTensor." % (input_size))
     
@@ -47,8 +56,15 @@ class ModelExecutor:
         
         :param image_path: path pointing to an image to predict on
         """
-        self.model.read_file(image_path)
+        print("before jpg read")
+        print(gc.mem_free())
+        self.model.read_jpg(image_path)
+        print("after jpg read")
+        print(gc.mem_free())
         self.interpreter.invoke()
+        print("after interpreter")
+        print(gc.mem_free())
+#         TODO: FREE MEMORY??
         
     def init_interpreter(self):
         """
@@ -59,7 +75,7 @@ class ModelExecutor:
 class Model:
     def __init__(self, model_size, input_size):
         self.model_buffer = bytearray(model_size)
-        self.input_buffer = bytearray(input_size)
+        self.input_buffer = None
         
     def read_model(self, model_path):
         """
@@ -71,15 +87,18 @@ class Model:
         file.readinto(self.model_buffer)
         file.close()
         
-    def read_file(self, file_path):
+    def read_jpg(self, file_path):
         """
         Read file from given path to memory
         
         :param file_path: file to be loaded
         """
-        file = open(file_path, 'rb')
-        file.readinto(self.input_buffer)
-        file.close()
+        self.input_buffer, _, _ = jpglib.decompress_jpg(file_path)
+        print(type(self.input_buffer))
+        print(len(self.input_buffer))
+        print(self.input_buffer[0])
+        print(self.input_buffer[1])
+        print(self.input_buffer[2])
     
 class ModelConfig:
     def __init__(self, model_config):
@@ -88,15 +107,23 @@ class ModelConfig:
         
         if 'input_dims' not in model_config:
             raise Exception("model_config requires input_dims key")
+        if len(model_config['input_dims']) != 4:
+            raise Exception("input_dims needs to be length 4")
         if 'output_dims' not in model_config:
             raise Exception("model_config requires output_dims key")
+        if len(model_config['output_dims']) != 2:
+            raise Exception("output_dims needs to be length 2")
         if 'path' not in model_config:
             raise Exception("model_config requires path key")
         if 'arena_size' not in model_config:
             raise Exception("model_config requires arena_size key")
         
         self.input_size = dims_to_size(model_config['input_dims'])
+        self.width = model_config['input_dims'][2]
+        self.height = model_config['input_dims'][1]
+        
         self.output_size = dims_to_size(model_config['output_dims'])
+        self.class_num = model_config['output_dims'][1]
         
         self.path = model_config['path']
         
@@ -109,3 +136,4 @@ class ModelConfig:
         else:
             self.labels_path = None
         
+

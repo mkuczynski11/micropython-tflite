@@ -90,7 +90,7 @@ STATIC mp_obj_t jpglib_decompress_jpg(mp_obj_t name_param)
     const char *filename;
     void *work;                 // work buffer for jpg & png decoding
     mp_file_t *fp;				// file object
-	uint16_t *i2c_buffer;		// resident buffer if buffer_size given
+	uint8_t *i2c_buffer;		// resident buffer if buffer_size given
 	mp_int_t x = 0, y = 0, width = 0, height = 0;
     
     filename = mp_obj_str_get_str(name_param);
@@ -117,14 +117,14 @@ STATIC mp_obj_t jpglib_decompress_jpg(mp_obj_t name_param)
 				devid.bottom = y + height - 1;
 
                 bufsize = 2 * width * height;
-				i2c_buffer = m_malloc(bufsize);
+				i2c_buffer = m_malloc(bufsize * 3); // Times 3 because each pixel will be represented by 3 channels
 				if (i2c_buffer) {
 					memset(i2c_buffer, 0xBEEF, bufsize);
 				} else {
 					mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT("out of memory"));
 				}
 
-                devid.fbuf	= (uint8_t *) i2c_buffer;
+                devid.fbuf	= i2c_buffer;
 				devid.wfbuf = jdec.width;
 				res = jd_decomp(&jdec, out_crop, 0); // Start to decompress with 1/1 scaling
 				if (res != JDR_OK) {
