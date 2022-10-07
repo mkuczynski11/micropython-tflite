@@ -1,10 +1,9 @@
 # ESP32-CAM mushroom recognition
 ## Project dependencies
+### Fire_beetle
 - [TFT screen driver](https://github.com/russhughes/st7789_mpy)
-- [Camera driver](https://github.com/lemariva/micropython-camera-driver)
-- [Espressif IoT Development Framework](https://github.com/espressif/esp-idf) - release v4.2
+- [Espressif IoT Development Framework](https://github.com/espressif/esp-idf) - release v4.2 or v4.3.1
 - [Micropython](https://github.com/micropython/micropython)
-- [ESP32-camera](https://github.com/espressif/esp32-camera) - [`093688e`](https://github.com/espressif/esp32-camera/commit/093688e0b3521ac982bc3d38bbf92059d97e3613)
 - [Microlite](https://github.com/mocleiri/tensorflow-micropython-examples)
 
 ## ESP32_CAM with camera driver and microlite building
@@ -26,7 +25,6 @@ cd tensorflow-micropython-examples
 git submodule init
 git submodule update --recursive
 # Clone the newest micropython and update required submodules
-cd ..
 rm -rf micropython
 git clone https://github.com/micropython/micropython
 cd micropython
@@ -34,8 +32,8 @@ git checkout bdbc44474f92db19a40b5f710a140a0bf70fb0ec
 git submodule update --init lib/axtls
 git submodule update --init lib/berkeley-db-1.xx
 # Prepare microlite
-rm -rf ./micropython-modules/microlite/tflm
-cd tensorflow
+rm -rf ../micropython-modules/microlite/tflm
+cd ../tensorflow
 ../micropython-modules/microlite/prepare-tflm-esp.sh
 # Initialize camera drivers
 cd ../tflm_esp_kernels
@@ -48,8 +46,12 @@ make
 cd ../../..
 rm -rf tensorflow-micropython-examples/micropython-modules/microlite/tensorflow-microlite.c
 rm -rf tensorflow-micropython-examples/micropython-modules/micropython-camera-driver/modcamera.c
+rm -rf tensorflow-micropython-examples/micropython-modules/micropython-camera-driver/micropython.cmake
 cp boards/esp32_cam/modcamera.c tensorflow-micropython-examples/micropython-modules/micropython-camera-driver/
 cp boards/esp32_cam/tensorflow-microlite.c tensorflow-micropython-examples/micropython-modules/microlite/
+cp boards/esp32_cam/micropython.cmake tensorflow-micropython-examples/micropython-modules/micropython.cmake
+
+cp -r boards/esp32_cam/jpglib tensorflow-micropython-examples/micropython-modules/jpglib
 # Checkout to the updated ulab version
 cd tensorflow-micropython-examples
 rm -rf micropython-ulab
