@@ -53,15 +53,15 @@ CMAKE_BINARY_DIR = /home/mkuczyns/desktop/micropython_drivers/micropython-tflite
 # Include the progress variables for this target.
 include CMakeFiles/_project_elf_src.dir/progress.make
 
-CMakeFiles/_project_elf_src: project_elf_src.c
+CMakeFiles/_project_elf_src: project_elf_src_esp32.c
 
 
-project_elf_src.c:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating project_elf_src.c"
-	/usr/bin/cmake -E touch /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/project_elf_src.c
+project_elf_src_esp32.c:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating project_elf_src_esp32.c"
+	/usr/bin/cmake -E touch /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/project_elf_src_esp32.c
 
 _project_elf_src: CMakeFiles/_project_elf_src
-_project_elf_src: project_elf_src.c
+_project_elf_src: project_elf_src_esp32.c
 _project_elf_src: CMakeFiles/_project_elf_src.dir/build.make
 
 .PHONY : _project_elf_src

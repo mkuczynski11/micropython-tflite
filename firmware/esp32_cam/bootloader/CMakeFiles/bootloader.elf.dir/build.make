@@ -57,56 +57,65 @@ include CMakeFiles/bootloader.elf.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/bootloader.elf.dir/flags.make
 
-project_elf_src.c:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating project_elf_src.c"
-	/usr/bin/cmake -E touch /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/project_elf_src.c
+project_elf_src_esp32.c:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating project_elf_src_esp32.c"
+	/usr/bin/cmake -E touch /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/project_elf_src_esp32.c
 
-CMakeFiles/bootloader.elf.dir/project_elf_src.c.obj: CMakeFiles/bootloader.elf.dir/flags.make
-CMakeFiles/bootloader.elf.dir/project_elf_src.c.obj: project_elf_src.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/bootloader.elf.dir/project_elf_src.c.obj"
-	/home/mkuczyns/.espressif/tools/xtensa-esp32-elf/esp-2020r3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/bootloader.elf.dir/project_elf_src.c.obj   -c /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/project_elf_src.c
+CMakeFiles/bootloader.elf.dir/project_elf_src_esp32.c.obj: CMakeFiles/bootloader.elf.dir/flags.make
+CMakeFiles/bootloader.elf.dir/project_elf_src_esp32.c.obj: project_elf_src_esp32.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/bootloader.elf.dir/project_elf_src_esp32.c.obj"
+	/home/mkuczyns/.espressif/tools/xtensa-esp32-elf/esp-2021r1-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/bootloader.elf.dir/project_elf_src_esp32.c.obj   -c /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/project_elf_src_esp32.c
 
-CMakeFiles/bootloader.elf.dir/project_elf_src.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/bootloader.elf.dir/project_elf_src.c.i"
-	/home/mkuczyns/.espressif/tools/xtensa-esp32-elf/esp-2020r3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/project_elf_src.c > CMakeFiles/bootloader.elf.dir/project_elf_src.c.i
+CMakeFiles/bootloader.elf.dir/project_elf_src_esp32.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/bootloader.elf.dir/project_elf_src_esp32.c.i"
+	/home/mkuczyns/.espressif/tools/xtensa-esp32-elf/esp-2021r1-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/project_elf_src_esp32.c > CMakeFiles/bootloader.elf.dir/project_elf_src_esp32.c.i
 
-CMakeFiles/bootloader.elf.dir/project_elf_src.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/bootloader.elf.dir/project_elf_src.c.s"
-	/home/mkuczyns/.espressif/tools/xtensa-esp32-elf/esp-2020r3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/project_elf_src.c -o CMakeFiles/bootloader.elf.dir/project_elf_src.c.s
+CMakeFiles/bootloader.elf.dir/project_elf_src_esp32.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/bootloader.elf.dir/project_elf_src_esp32.c.s"
+	/home/mkuczyns/.espressif/tools/xtensa-esp32-elf/esp-2021r1-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/project_elf_src_esp32.c -o CMakeFiles/bootloader.elf.dir/project_elf_src_esp32.c.s
 
 # Object files for target bootloader.elf
 bootloader_elf_OBJECTS = \
-"CMakeFiles/bootloader.elf.dir/project_elf_src.c.obj"
+"CMakeFiles/bootloader.elf.dir/project_elf_src_esp32.c.obj"
 
 # External object files for target bootloader.elf
 bootloader_elf_EXTERNAL_OBJECTS =
 
-bootloader.elf: CMakeFiles/bootloader.elf.dir/project_elf_src.c.obj
+bootloader.elf: CMakeFiles/bootloader.elf.dir/project_elf_src_esp32.c.obj
 bootloader.elf: CMakeFiles/bootloader.elf.dir/build.make
+bootloader.elf: esp-idf/hal/libhal.a
 bootloader.elf: esp-idf/soc/libsoc.a
-bootloader.elf: esp-idf/log/liblog.a
 bootloader.elf: esp-idf/micro-ecc/libmicro-ecc.a
 bootloader.elf: esp-idf/spi_flash/libspi_flash.a
-bootloader.elf: esp-idf/efuse/libefuse.a
 bootloader.elf: esp-idf/bootloader_support/libbootloader_support.a
+bootloader.elf: esp-idf/efuse/libefuse.a
+bootloader.elf: esp-idf/esp_hw_support/libesp_hw_support.a
+bootloader.elf: esp-idf/esp_rom/libesp_rom.a
+bootloader.elf: esp-idf/log/liblog.a
 bootloader.elf: esp-idf/main/libmain.a
-bootloader.elf: esp-idf/spi_flash/libspi_flash.a
-bootloader.elf: esp-idf/efuse/libefuse.a
-bootloader.elf: esp-idf/bootloader_support/libbootloader_support.a
-bootloader.elf: esp-idf/spi_flash/libspi_flash.a
-bootloader.elf: esp-idf/efuse/libefuse.a
-bootloader.elf: esp-idf/bootloader_support/libbootloader_support.a
+bootloader.elf: esp-idf/hal/libhal.a
+bootloader.elf: esp-idf/soc/libsoc.a
 bootloader.elf: esp-idf/micro-ecc/libmicro-ecc.a
-bootloader.elf: esp-idf/soc/libsoc.a
+bootloader.elf: esp-idf/spi_flash/libspi_flash.a
+bootloader.elf: esp-idf/bootloader_support/libbootloader_support.a
+bootloader.elf: esp-idf/efuse/libefuse.a
+bootloader.elf: esp-idf/esp_hw_support/libesp_hw_support.a
+bootloader.elf: esp-idf/esp_rom/libesp_rom.a
 bootloader.elf: esp-idf/log/liblog.a
-bootloader.elf: esp-idf/soc/soc/esp32/libsoc_esp32.a
+bootloader.elf: esp-idf/hal/libhal.a
 bootloader.elf: esp-idf/soc/libsoc.a
+bootloader.elf: esp-idf/micro-ecc/libmicro-ecc.a
+bootloader.elf: esp-idf/spi_flash/libspi_flash.a
+bootloader.elf: esp-idf/bootloader_support/libbootloader_support.a
+bootloader.elf: esp-idf/efuse/libefuse.a
+bootloader.elf: esp-idf/esp_hw_support/libesp_hw_support.a
+bootloader.elf: esp-idf/esp_rom/libesp_rom.a
 bootloader.elf: esp-idf/log/liblog.a
-bootloader.elf: esp-idf/soc/soc/esp32/libsoc_esp32.a
 bootloader.elf: /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esp32/ld/esp32.peripherals.ld
 bootloader.elf: /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esp_rom/esp32/ld/esp32.rom.ld
-bootloader.elf: /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esp_rom/esp32/ld/esp32.rom.newlib-funcs.ld
+bootloader.elf: /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esp_rom/esp32/ld/esp32.rom.api.ld
 bootloader.elf: /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esp_rom/esp32/ld/esp32.rom.libgcc.ld
+bootloader.elf: /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esp_rom/esp32/ld/esp32.rom.newlib-funcs.ld
 bootloader.elf: /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/bootloader/subproject/main/ld/esp32/bootloader.ld
 bootloader.elf: /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/bootloader/subproject/main/ld/esp32/bootloader.rom.ld
 bootloader.elf: CMakeFiles/bootloader.elf.dir/link.txt
@@ -122,7 +131,7 @@ CMakeFiles/bootloader.elf.dir/clean:
 	$(CMAKE_COMMAND) -P CMakeFiles/bootloader.elf.dir/cmake_clean.cmake
 .PHONY : CMakeFiles/bootloader.elf.dir/clean
 
-CMakeFiles/bootloader.elf.dir/depend: project_elf_src.c
+CMakeFiles/bootloader.elf.dir/depend: project_elf_src_esp32.c
 	cd /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/bootloader/subproject /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/bootloader/subproject /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/CMakeFiles/bootloader.elf.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/bootloader.elf.dir/depend
 

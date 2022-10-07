@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/mkuczyns/desktop/micropython_drivers/micropython-tflite
 include CMakeFiles/erase_flash.dir/progress.make
 
 CMakeFiles/erase_flash:
-	cd /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esptool_py && /usr/bin/cmake -D IDF_PATH="/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf" -D ESPTOOLPY="/home/mkuczyns/.espressif/python_env/idf4.2_py3.8_env/bin/python /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32" -D ESPTOOL_ARGS="erase_flash" -P run_esptool.cmake
+	cd /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esptool_py && /usr/bin/cmake -D IDF_PATH="/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf" -D SERIAL_TOOL="/home/mkuczyns/.espressif/python_env/idf4.3_py3.8_env/bin/python /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32" -D SERIAL_TOOL_ARGS="erase_flash" -P run_serial_tool.cmake
 
 erase_flash: CMakeFiles/erase_flash
 erase_flash: CMakeFiles/erase_flash.dir/build.make

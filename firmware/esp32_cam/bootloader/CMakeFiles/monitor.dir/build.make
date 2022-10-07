@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/mkuczyns/desktop/micropython_drivers/micropython-tflite
 include CMakeFiles/monitor.dir/progress.make
 
 CMakeFiles/monitor:
-	cd /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esptool_py && /usr/bin/cmake -D IDF_PATH="/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf" -D IDF_MONITOR="/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/tools/idf_monitor.py" -D ELF_FILE="/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/bootloader.elf" -D WORKING_DIRECTORY="/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader" -P run_idf_monitor.cmake
+	cd /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/components/esptool_py && /usr/bin/cmake -D IDF_PATH="/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf" -D SERIAL_TOOL="/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/tools/idf_monitor.py" -D SERIAL_TOOL_ARGS="/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/bootloader.elf" -D WORKING_DIRECTORY="/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader" -P run_serial_tool.cmake
 
 monitor: CMakeFiles/monitor
 monitor: CMakeFiles/monitor.dir/build.make

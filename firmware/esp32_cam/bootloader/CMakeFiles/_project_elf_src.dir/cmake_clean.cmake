@@ -3,9 +3,9 @@ file(REMOVE_RECURSE
   "bootloader.map"
   "config/sdkconfig.cmake"
   "config/sdkconfig.h"
-  "project_elf_src.c"
+  "project_elf_src_esp32.c"
   "CMakeFiles/_project_elf_src"
-  "project_elf_src.c"
+  "project_elf_src_esp32.c"
 )
 
 # Per-language clean rules from dependency scanning.

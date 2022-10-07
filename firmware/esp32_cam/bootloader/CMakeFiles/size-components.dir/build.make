@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/mkuczyns/desktop/micropython_drivers/micropython-tflite
 include CMakeFiles/size-components.dir/progress.make
 
 CMakeFiles/size-components: bootloader.elf
-	/home/mkuczyns/.espressif/python_env/idf4.2_py3.8_env/bin/python /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/tools/idf_size.py --target esp32 --archives /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/bootloader.map
+	/home/mkuczyns/.espressif/python_env/idf4.3_py3.8_env/bin/python /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/esp-idf/tools/idf_size.py --archives /home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/bootloader.map
 
 size-components: CMakeFiles/size-components
 size-components: CMakeFiles/size-components.dir/build.make

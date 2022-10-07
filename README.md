@@ -10,29 +10,57 @@
 ## ESP32_CAM with camera driver and microlite building
 You can access pre-build firmware in `firmware` directory of this repo, however below are listed steps required to generate it by yourself.
 ```bash
-pip install Pillow
-pip install Wave
-git clone -b v4.2 --recursive https://github.com/espressif/esp-idf.git
+# Setup esp-idf
+git clone -b v4.3.1 --recursive https://github.com/espressif/esp-idf.git
 cd esp-idf
 ./install.sh
 . ./export.sh
+# Install pip dependencies
+. /home/mkuczyns/.espressif/python_env/idf4.3_py3.8_env/bin/activate
+pip install Pillow
+pip install Wave
+# Clone and update microlite repo
+cd ..
 git clone https://github.com/mocleiri/tensorflow-micropython-examples.git
 cd tensorflow-micropython-examples
 git submodule init
 git submodule update --recursive
+# Clone the newest micropython and update required submodules
+cd ..
+rm -rf micropython
+git clone https://github.com/micropython/micropython
 cd micropython
+git checkout bdbc44474f92db19a40b5f710a140a0bf70fb0ec
 git submodule update --init lib/axtls
 git submodule update --init lib/berkeley-db-1.xx
-cd ..
+# Prepare microlite
 rm -rf ./micropython-modules/microlite/tflm
 cd tensorflow
 ../micropython-modules/microlite/prepare-tflm-esp.sh
-cd ../micropython
-make -C mpy-cross V=1 clean all
+# Initialize camera drivers
 cd ../tflm_esp_kernels
-git submodule update --init
-git submodule update --recursive
-cd ../boards/esp32/MICROLITE_SPIRAM_CAM
+git submodule update --init examples/person_detection/esp32-camera
+# Prepare for build
+cd ../micropython/mpy-cross
+. ../../../esp-idf/export.sh 
+make
+# Replace microlite and camera driver source code to the latest micropython requirements
+cd ../../..
+rm -rf tensorflow-micropython-examples/micropython-modules/microlite/tensorflow-microlite.c
+rm -rf tensorflow-micropython-examples/micropython-modules/micropython-camera-driver/modcamera.c
+cp boards/esp32_cam/modcamera.c tensorflow-micropython-examples/micropython-modules/micropython-camera-driver/
+cp boards/esp32_cam/tensorflow-microlite.c tensorflow-micropython-examples/micropython-modules/microlite/
+# Checkout to the updated ulab version
+cd tensorflow-micropython-examples
+rm -rf micropython-ulab
+git clone https://github.com/v923z/micropython-ulab.git
+cd micropython-ulab
+git checkout 5ccfa5cdd9040c2c4219c07b005256427d31ed1c
+# Build firmware
+. ../../esp-idf/export.sh
+cd ../micropython/ports/esp32
+make BOARD= submodules
+cd ../../../boards/esp32/MICROLITE_SPIRAM_CAM
 rm -rf build
 idf.py build
 ```

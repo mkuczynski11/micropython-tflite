@@ -4,10 +4,10 @@ file(REMOVE_RECURSE
   "config/sdkconfig.cmake"
   "config/sdkconfig.h"
   "project_elf_src_esp32.c"
-  "CMakeFiles/size-files"
+  "CMakeFiles/uf2-app"
 )
 
 # Per-language clean rules from dependency scanning.
 foreach(lang )
-  include(CMakeFiles/size-files.dir/cmake_clean_${lang}.cmake OPTIONAL)
+  include(CMakeFiles/uf2-app.dir/cmake_clean_${lang}.cmake OPTIONAL)
 endforeach()
