@@ -25,7 +25,7 @@ class ModelExecutor:
         row_bytes = 240*3
         model_width = self.config.width * 3
         y_offset = (240 - self.config.height)//2 * row_bytes
-        x_offset = (row_bytes - model_width)//2 * model_width
+        x_offset = (row_bytes - model_width)//2
         
         for i in range (0, input_size):
             buffer_index = ((x_offset) + i%model_width + (i//model_width)*row_bytes) + y_offset
@@ -93,12 +93,8 @@ class Model:
         
         :param file_path: file to be loaded
         """
-        self.input_buffer, _, _ = jpglib.decompress_jpg(file_path)
-        print(type(self.input_buffer))
-        print(len(self.input_buffer))
-        print(self.input_buffer[0])
-        print(self.input_buffer[1])
-        print(self.input_buffer[2])
+        size, self.input_buffer, _, _ = jpglib.decompress_jpg(file_path)
+        gc.collect()
     
 class ModelConfig:
     def __init__(self, model_config):

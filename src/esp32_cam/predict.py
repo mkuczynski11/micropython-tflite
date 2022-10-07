@@ -8,9 +8,11 @@ from model import ModelConfig, Model, ModelExecutor
 def take_picture():
         buf = camera.capture()
         print("Picture taken. Saving to file")
-        f = open('pic.jpg', 'w')
+        print(len(buf))
+        f = open('sd/pic.jpg', 'w')
         f.write(buf)
         f.close()
+        print("File closed")
 
 def main():
     print("Starting main function")
@@ -36,11 +38,14 @@ def main():
     print(gc.mem_free())
 
     print("Prediction starting")
-    model_executor.predict('pic.jpg')
+    model_executor.predict('sd/pic.jpg')
     print("Prediction ending")
+    
+    camera.deinit()
     
     print("Ending main function")
 
 main()
+
 
 
