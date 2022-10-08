@@ -5,8 +5,9 @@
 - [Espressif IoT Development Framework](https://github.com/espressif/esp-idf) - release v4.2 or v4.3.1
 - [Micropython](https://github.com/micropython/micropython)
 - [Microlite](https://github.com/mocleiri/tensorflow-micropython-examples)
+- [Camera driver](https://github.com/lemariva/micropython-camera-driver)
 
-## ESP32_CAM with camera driver and microlite building
+## Firmware with microlite building
 You can access pre-build firmware in `firmware` directory of this repo, however below are listed steps required to generate it by yourself.
 ```bash
 # Setup esp-idf
@@ -76,23 +77,30 @@ Successful build should generate `build-ESP32_CAM`in `micropython/ports/esp32` d
 esptool.py -p COM3 -b 460800 --before default_reset --after hard_reset --chip esp32 write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x1000 .\bootloader\bootloader.bin 0x8000 .\partition_table\partition-table.bin 0x10000 .\micropython.bin
 ```
 
-## Fire_beetle esp32 with st7789 building
+## Firmware with st7789 and camera driver building
 You can access pre-build firmware in `firmware` directory of this repo, however below are listed steps required to generate it by yourself.
 ```bash
 git clone -b v4.2 --recursive https://github.com/espressif/esp-idf.git
 git clone --recursive https://github.com/micropython/micropython.git
 git clone https://github.com/russhughes/st7789_mpy.git
-cd micropython/mpy-cross/
-make
-cd ../../esp-idf
+https://github.com/lemariva/micropython-camera-driver
+rm micropython-camera-driver/src/modcamera.c
+cp boards/tft_camera/modcamera.c micropython-camera-driver/src/modcamera.c
+cd micropython-camera-driver
+git clone https://github.com/espressif/esp32-camera
+cd esp32-camera
+git checkout 093688e0b3521ac982bc3d38bbf92059d97e3613
+cd ../../../esp-idf
 ./install.sh
 . ./export.sh
-cd ../micropython/ports/esp32/
-cp -r ../../../boards/fire_beetle/ ./boards/fire_beetle
+cd ../micropython/mpy-cross/
+make
+cd ../ports/esp32/
+cp -r ../../../micropython-camera-driver/boards/ESP32_CAM/ ./boards/ESP32_CAM
 cp ../../../st7789_mpy/fonts/bitmap/vga1_16x16.py modules # Optional: Adding font in order to display text
-make USER_C_MODULES=`full_path_to_cloned_repo`/micropython.cmake BOARD=fire_beetle FROZEN_MANIFEST="" FROZEN_MPY_DIR=$UPYDIR/modules
+make USER_C_MODULES=`full_path_to_cloned_repo`/micropython.cmake BOARD=ESP32_CAM FROZEN_MANIFEST="" FROZEN_MPY_DIR=$UPYDIR/modules
 ```
 
-Successful build should generate `build-fire_beetle`in `micropython/ports/esp32` directory. Inside of it you can find firmware.bin which should contain all dependencies and after flashing it onto device you should have flash size of 16MB and `st7789` library. 
+Successful build should generate `build-ESP32_CAM`in `micropython/ports/esp32` directory. Inside of it you can find firmware.bin which should contain all dependencies and after flashing it onto device you should have `st7789` AND `camera` libraries. 
 
-*NOTE:* This guide is made for ESP32 Fire_beetle module. Trying to build firmware intended for other modules should work provided following the correct [micropython](https://github.com/micropython/micropython) guide.
+*NOTE:* This guide is made for ESP32_CAM module. Trying to build firmware intended for other modules should work provided following the correct [micropython](https://github.com/micropython/micropython) guide.
