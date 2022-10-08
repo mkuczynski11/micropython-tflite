@@ -27,9 +27,9 @@ git submodule init
 git submodule update --recursive
 # Clone the newest micropython and update required submodules
 rm -rf micropython
-git clone https://github.com/micropython/micropython
+git clone https://github.com/glenn20/micropython.git
 cd micropython
-git checkout bdbc44474f92db19a40b5f710a140a0bf70fb0ec
+git checkout 5a8312f15c5a5fcc776f3710efca3bf017607170
 git submodule update --init lib/axtls
 git submodule update --init lib/berkeley-db-1.xx
 # Prepare microlite
@@ -48,11 +48,10 @@ cd ../../..
 rm -rf tensorflow-micropython-examples/micropython-modules/microlite/tensorflow-microlite.c
 rm -rf tensorflow-micropython-examples/micropython-modules/micropython-camera-driver/modcamera.c
 rm -rf tensorflow-micropython-examples/micropython-modules/micropython.cmake
-cp boards/esp32_cam/modcamera.c tensorflow-micropython-examples/micropython-modules/micropython-camera-driver/
-cp boards/esp32_cam/tensorflow-microlite.c tensorflow-micropython-examples/micropython-modules/microlite/
-cp boards/esp32_cam/micropython.cmake tensorflow-micropython-examples/micropython-modules/micropython.cmake
-
-cp -r boards/esp32_cam/jpglib tensorflow-micropython-examples/micropython-modules/jpglib
+cp boards/tft_camera/modcamera.c tensorflow-micropython-examples/micropython-modules/micropython-camera-driver/
+cp boards/microlite/tensorflow-microlite.c tensorflow-micropython-examples/micropython-modules/microlite/
+cp boards/microlite/micropython.cmake tensorflow-micropython-examples/micropython-modules/micropython.cmake
+cp -r boards/microlite/jpglib tensorflow-micropython-examples/micropython-modules/jpglib
 # Checkout to the updated ulab version
 cd tensorflow-micropython-examples
 rm -rf micropython-ulab
@@ -68,7 +67,7 @@ rm -rf build
 idf.py build
 ```
 
-Successful build should generate `build-ESP32_CAM`in `micropython/ports/esp32` directory. Inside of it you can find micropython.bin, bootloader dir and partition_table dir which should contain all dependencies and after flashing it onto device you should be able to import `camera` and `microlite` libraries. 
+Successful build should generate `build-ESP32_CAM`in `micropython/ports/esp32` directory. Inside of it you can find micropython.bin, bootloader dir and partition_table dir which should contain all dependencies and after flashing it onto device you should be able to import `microlite` libraries. 
 
 *NOTE:* This guide is made for ESP32-CAM AI-THINKER module. Trying to build firmware intended for other modules should work provided following the correct [micropython](https://github.com/micropython/micropython) guide.
 

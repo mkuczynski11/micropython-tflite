@@ -6,5 +6,5 @@
 
 #IncludeRegexTransform: 
 
-/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/bootloader/project_elf_src_esp32.c
+/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM/build/bootloader/project_elf_src_esp32.c
 

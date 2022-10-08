@@ -107,7 +107,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/git-data/grabRef.cmake"
   "config/sdkconfig.cmake"
   "config/sdkconfig.h"
-  "/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM_CAM/build/sdkconfig"
+  "/home/mkuczyns/desktop/micropython_drivers/micropython-tflite/tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM/build/sdkconfig"
   "/usr/share/cmake-3.16/Modules/CMakeASMCompiler.cmake.in"
   "/usr/share/cmake-3.16/Modules/CMakeASMInformation.cmake"
   "/usr/share/cmake-3.16/Modules/CMakeCCompiler.cmake.in"
