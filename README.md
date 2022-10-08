@@ -81,12 +81,12 @@ esptool.py -p COM3 -b 460800 --before default_reset --after hard_reset --chip es
 You can access pre-build firmware in `firmware` directory of this repo, however below are listed steps required to generate it by yourself.
 ```bash
 git clone -b v4.2 --recursive https://github.com/espressif/esp-idf.git
-git clone --recursive https://github.com/micropython/micropython.git
+git clone --recursive https://github.com/glenn20/micropython.git
 git clone https://github.com/russhughes/st7789_mpy.git
-https://github.com/lemariva/micropython-camera-driver
+git clone https://github.com/lemariva/micropython-camera-driver
 rm micropython-camera-driver/src/modcamera.c
 cp boards/tft_camera/modcamera.c micropython-camera-driver/src/modcamera.c
-cd micropython-camera-driver
+cd esp-idf/components
 git clone https://github.com/espressif/esp32-camera
 cd esp32-camera
 git checkout 093688e0b3521ac982bc3d38bbf92059d97e3613
@@ -94,6 +94,7 @@ cd ../../../esp-idf
 ./install.sh
 . ./export.sh
 cd ../micropython/mpy-cross/
+git checkout 5a8312f15c5a5fcc776f3710efca3bf017607170
 make
 cd ../ports/esp32/
 cp -r ../../../micropython-camera-driver/boards/ESP32_CAM/ ./boards/ESP32_CAM
