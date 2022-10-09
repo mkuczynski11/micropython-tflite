@@ -84,7 +84,9 @@ git clone --recursive https://github.com/glenn20/micropython.git
 git clone https://github.com/russhughes/st7789_mpy.git
 git clone https://github.com/lemariva/micropython-camera-driver
 rm micropython-camera-driver/src/modcamera.c
+rm st7789_mpy/st7789/st7789.c
 cp boards/tft_camera/modcamera.c micropython-camera-driver/src/modcamera.c
+cp boards/tft_camera/st7789.c st7789_mpy/st7789/st7789.c
 cd esp-idf/components
 git clone https://github.com/espressif/esp32-camera
 cd esp32-camera
