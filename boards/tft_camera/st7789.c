@@ -1699,7 +1699,6 @@ STATIC mp_obj_t st7789_ST7789_jpg_from_buffer(size_t n_args, const mp_obj_t *arg
 		} else {
 			mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("jpg prepare failed."));
 		}
-		mp_close(devid.fp);
 	}
 	m_free(self->work); // Discard work area
 	return mp_const_none;
