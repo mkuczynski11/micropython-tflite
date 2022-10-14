@@ -62,12 +62,12 @@ git checkout 5ccfa5cdd9040c2c4219c07b005256427d31ed1c
 . ../../esp-idf/export.sh
 cd ../micropython/ports/esp32
 make BOARD= submodules
-cd ../../../boards/esp32/MICROLITE_SPIRAM_CAM
+cd ../../../boards/esp32/MICROLITE_SPIRAM
 rm -rf build
 idf.py build
 ```
 
-Successful build should generate `build-ESP32_CAM`in `micropython/ports/esp32` directory. Inside of it you can find micropython.bin, bootloader dir and partition_table dir which should contain all dependencies and after flashing it onto device you should be able to import `microlite` libraries. 
+Successful build should generate `build`in `tensorflow-micropython-examples/boards/esp32/MICROLITE_SPIRAM` directory. Inside of it you can find micropython.bin, bootloader dir and partition_table dir which should contain all dependencies and after flashing it onto device you should be able to import `microlite` library. 
 
 *NOTE:* This guide is made for ESP32-CAM AI-THINKER module. Trying to build firmware intended for other modules should work provided following the correct [micropython](https://github.com/micropython/micropython) guide.
 
@@ -105,4 +105,4 @@ make USER_C_MODULES=`full_path_to_cloned_repo`/micropython.cmake BOARD=ESP32_CAM
 
 Successful build should generate `build-ESP32_CAM`in `micropython/ports/esp32` directory. Inside of it you can find firmware.bin which should contain all dependencies and after flashing it onto device you should have `st7789` AND `camera` libraries. 
 
-*NOTE:* This guide is made for ESP32_CAM module. Trying to build firmware intended for other modules should work provided following the correct [micropython](https://github.com/micropython/micropython) guide.
+*NOTE:* This guide is made for ESP32-CAM AI-THINKER module. Trying to build firmware intended for other modules should work provided following the correct [micropython](https://github.com/micropython/micropython) guide.
