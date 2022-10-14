@@ -4,14 +4,16 @@ MICROSD_DIRECTORY = '/sd'
 # Model configuration
 # TODO: Move arena size to logic
 # TODO: Add possibility to add more models configurations
-# TODO: Add guide to defining parameters
+# TODO: Such configuration should be send on model transfer from computer
+# TODO: Make sure all folders are created when sending model into esp
 config = {
-    'input_dims': (1, 224, 224, 3),
-    'output_dims': (1, 7),
-    'labels_path': 'sd/labels.txt',
-    'path': 'sd/model_q.tflite',
+    'image_width': 224,
+    'image_height': 224,
+    'labels_path': 'sd/models/muschrooms/labels.txt',
+    'path': 'sd/models/muschrooms/model.tflite',
     'arena_size': 800000
 }
+
 
 
 

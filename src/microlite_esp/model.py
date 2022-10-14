@@ -16,10 +16,11 @@ class ModelExecutor:
             self.input_callback = self.base_input_callback
         if output_callback == None:
             self.output_callback = self.base_output_callback
+        self.predicted_class = ""
             
     def base_input_callback(self, microlite_interpreter):
         """
-        Function to call while populating model's input tensors
+        Function to call while populating model's input tensors.
         """
         input_tensor = microlite_interpreter.getInputTensor(0)
         
@@ -37,40 +38,43 @@ class ModelExecutor:
     
     def base_output_callback(self, microlite_interpreter):
         """
-        Function to call while reading results from model's output tensors
+        Function to call while reading results from model's output tensors.
         """
         output_tensor = microlite_interpreter.getOutputTensor(0)
         
-        output_size = self.config.output_size
+        output_size = self.config.class_num
         
+        best_index = 0
         text = "Prediction=["
         
         for i in range(output_size):
+            value = output_tensor.getValue(i)
+            if value > output_tensor.getValue(best_index):
+                best_index = i
+                
+            text += self.config.labels[i]
+            text += " "
             text += str(output_tensor.getValue(i))
             text += " "
         text += "]"
         
         print(text)
+        
+        self.predicted_class = self.config.labels[best_index]
   
     def predict(self, image_path):
         """
-        Run prediction on image from the given path
+        Run prediction on image from the given path.
         
         :param image_path: path pointing to an image to predict on
         """
-        print("before jpg read")
-        print(gc.mem_free())
         self.model.read_jpg(image_path)
-        print("after jpg read")
-        print(gc.mem_free())
         self.interpreter.invoke()
-        print("after interpreter")
-        print(gc.mem_free())
-#         TODO: FREE MEMORY??
+        return self.predicted_class
         
     def init_interpreter(self):
         """
-        Microlite interpreter initialization
+        Microlite interpreter initialization.
         """
         self.interpreter = microlite.interpreter(self.model.model_buffer, self.config.arena_size, self.input_callback, self.output_callback) # Experimental arena size
         
@@ -81,7 +85,7 @@ class Model:
         
     def read_model(self, model_path):
         """
-        Read model from given path to memory
+        Read model from given path to memory.
         
         :param model_path: model to be loaded
         """
@@ -91,32 +95,46 @@ class Model:
         
     def read_jpg(self, file_path):
         """
-        Read file from given path to memory
+        Read file from given path to memory.
         
         :param file_path: file to be loaded
         """
         size, self.input_buffer, _, _ = jpglib.decompress_jpg(file_path)
-#         gc.collect()
+        
+    def reset_input_buffer(self):
+        """
+        Reset input buffer by freeing the memory.
+        """
+        self.input_buffer = None
     
 class ModelConfig:
     def __init__(self, model_config):
-        self.input_size = dims_to_size(model_config['input_dims'])
-        self.width = model_config['input_dims'][2]
-        self.height = model_config['input_dims'][1]
+        self.width = model_config['image_width']
+        self.height = model_config['image_height']
+        self.channels = 3
+        self.batch_size = 1
         
-        self.output_size = dims_to_size(model_config['output_dims'])
-        self.class_num = model_config['output_dims'][1]
+        self.input_dims = (self.batch_size, self.height, self.width, self.channels)
+        self.input_size = dims_to_size(self.input_dims)
         
         self.path = model_config['path']
-        
         self.size = get_file_size(self.path)
+        
+        self.labels = []
+        self.labels_path = model_config['labels_path']
+        self.read_labels()
+        self.class_num = len(self.labels)
         
         self.arena_size = model_config['arena_size']
         
-        if 'labels_path' in model_config:
-            self.labels_path = model_config['labels_path']
-        else:
-            self.labels_path = None
+    def read_labels(self):
+        """
+        Read labels from a given path into list.
+        """
         
-
+        file = open(self.labels_path, 'r')
+        lines = file.readlines()
+        for line in lines:
+            self.labels.append(line.strip())
+        file.close()
 
