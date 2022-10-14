@@ -1,4 +1,6 @@
-from utils import dims_to_size, get_file_size
+from utils import (
+    dims_to_size,
+    get_file_size)
 import microlite
 mode = 1
 import jpglib
@@ -94,26 +96,10 @@ class Model:
         :param file_path: file to be loaded
         """
         size, self.input_buffer, _, _ = jpglib.decompress_jpg(file_path)
-        gc.collect()
+#         gc.collect()
     
 class ModelConfig:
     def __init__(self, model_config):
-        if type(model_config) != dict:
-            raise Exception("model_config should be type dict")
-        
-        if 'input_dims' not in model_config:
-            raise Exception("model_config requires input_dims key")
-        if len(model_config['input_dims']) != 4:
-            raise Exception("input_dims needs to be length 4")
-        if 'output_dims' not in model_config:
-            raise Exception("model_config requires output_dims key")
-        if len(model_config['output_dims']) != 2:
-            raise Exception("output_dims needs to be length 2")
-        if 'path' not in model_config:
-            raise Exception("model_config requires path key")
-        if 'arena_size' not in model_config:
-            raise Exception("model_config requires arena_size key")
-        
         self.input_size = dims_to_size(model_config['input_dims'])
         self.width = model_config['input_dims'][2]
         self.height = model_config['input_dims'][1]
@@ -132,4 +118,5 @@ class ModelConfig:
         else:
             self.labels_path = None
         
+
 

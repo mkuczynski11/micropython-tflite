@@ -1,7 +1,5 @@
 # MicroSD card configuration
-microsd_config = {
-    'directory': '/sd'
-}
+MICROSD_DIRECTORY = '/sd'
 
 # Model configuration
 # TODO: Move arena size to logic
@@ -14,5 +12,6 @@ config = {
     'path': 'sd/model_q.tflite',
     'arena_size': 800000
 }
+
 
 

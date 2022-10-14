@@ -86,7 +86,7 @@ STATIC mp_obj_t jpglib_decompress_jpg(mp_obj_t name_param)
     void *work;                 // work buffer for jpg & png decoding
 	size_t sz_work = 3500; /* Size of work area */
     mp_file_t *fp;				// file object
-	uint16_t *i2c_buffer;		// resident buffer if buffer_size given
+	uint16_t *rgb_buffer;		// buffer for rgb888 image
 	mp_int_t x = 0, y = 0, width = 0, height = 0;
     
     filename = mp_obj_str_get_str(name_param);
@@ -109,14 +109,14 @@ STATIC mp_obj_t jpglib_decompress_jpg(mp_obj_t name_param)
 
                 // Initialize output device
                 bufsize = N_BPP * jdec.width * jdec.height;	/* Create frame buffer for output image */
-				i2c_buffer = m_malloc(bufsize);
-				if (i2c_buffer) {
-					memset(i2c_buffer, 0xBEEF, bufsize);
+				rgb_buffer = m_malloc(bufsize);
+				if (rgb_buffer) {
+					memset(rgb_buffer, 0xBEEF, bufsize);
 				} else {
 					mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT("out of memory"));
 				}
 
-                devid.fbuf	= (uint8_t *)i2c_buffer;
+                devid.fbuf	= (uint8_t *)rgb_buffer;
 				devid.wfbuf = jdec.width;
 
 				res = jd_decomp(&jdec, out_crop, 0); /* Start to decompress with 1/1 scaling */
@@ -131,10 +131,12 @@ STATIC mp_obj_t jpglib_decompress_jpg(mp_obj_t name_param)
     m_free(work); // Discard work area
     mp_obj_t result[4] = {
 			mp_obj_new_int(bufsize),
-			mp_obj_new_bytearray(bufsize, (mp_obj_t *) i2c_buffer),
+			mp_obj_new_bytearray(bufsize, (mp_obj_t *) rgb_buffer),
 			mp_obj_new_int(width),
 			mp_obj_new_int(height)
 		};
+
+	m_free(rgb_buffer); // Discard rgb888 buffer since it was copied to result
 
     return mp_obj_new_tuple(4, result);
 }
