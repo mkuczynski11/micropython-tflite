@@ -1,22 +1,15 @@
-import time
-import gc
+from config import config
+from model import ModelConfig, Model, ModelExecutor, ModelManager
+from app_manager import AppManager
+from app import app
 
-from config import config, MICROSD_DIRECTORY
-from model import ModelConfig, Model, ModelExecutor
+import uasyncio as asyncio
 
-def mock_file_exchange():
-    time.sleep(5)
-    src = open('mas.jpg', 'rb')
-    buf = src.read()
-    src.close()
-    return buf
+async def main_loop():
+    print("Starting main loop")
+    model_manager = ModelManager()
+    app_manager = AppManager(model_manager)
     
-
-# TODO: Create ModelManager which will communicate with other esp/computer
-#       and will handle this esp main loop
-def main():
-    print("Starting main function")
-
     # TODO: This should be created when user picks the model
     model_config = ModelConfig(config)
     model = Model(model_config.size, model_config.input_size)
@@ -24,24 +17,25 @@ def main():
     model_executor = ModelExecutor(model, model_config)
     model_executor.init_interpreter()
     
+    model_manager.reload_model(model_executor)
+    
+    msg_count = 0
     while True:
-        # TODO: Wait for esp-now msg with picture made on esp32-cam
-        image = mock_file_exchange()
-        # Save jpg to file
-        image_path = MICROSD_DIRECTORY + '/tmp/image.jpg'
-        f = open(image_path, 'wb')
-        f.write(image)
-        f.close()
-        # Run prediction on the file
-        class_name = model_executor.predict(image_path)
-        # Rename and move the file
-        classified_count = len(uos.listdir(MICROSD_DIRECTORY + '/images/muschrooms/' + class_name))
-        uos.rename(image_path, MICROSD_DIRECTORY + '/images/muschrooms/' + class_name + '/' + class_name + str(classified_count + 1) + '.jpg')
+        # If else for message type from other board
+        if msg_count == 0:
+            # Mock of ssid and password values
+            ssid = "UPC240648036"
+            # Mock of ssid and password values
+            password = "6SSGYAWT"
+            app_manager.init_wifi_connection(ssid, password)
+        else:
+            model_manager.predict_scenario()
         
-    print("Ending main function")
-
-main()
-
-
-
-
+        msg_count += 1
+        await asyncio.sleep(20)
+        
+    print("Ending main loop")
+    
+asyncio.create_task(main_loop())
+# Check IP of the device for connection
+app.run(host="0.0.0.0", port = 80)

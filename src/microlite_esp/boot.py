@@ -2,7 +2,10 @@
 import uos
 import machine
 from config import (
-    MICROSD_DIRECTORY
+    MICROSD_DIRECTORY,
+    MODELS_PATH,
+    IMAGES_PATH,
+    TMP_IMAGE_PATH
     )
 
 try:
@@ -14,15 +17,20 @@ except Exception as e:
     machine.reset()
 
 try:
-    uos.mkdir(MICROSD_DIRECTORY + '/images')
+    uos.mkdir(IMAGES_PATH)
 except Exception as e:
     print("Couldn't create images directory")
     print("Error ocurred: " + str(e))
     
 try:
-    uos.mkdir(MICROSD_DIRECTORY + '/models')
+    uos.mkdir(MODELS_PATH)
 except Exception as e:
     print("Couldn't create models directory")
     print("Error ocurred: " + str(e))
     
-
+try:
+    uos.mkdir(TMP_IMAGE_PATH)
+except Exception as e:
+    print("Couldn't create tmp image directory")
+    print("Error ocurred: " + str(e))
+    

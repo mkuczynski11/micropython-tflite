@@ -4,9 +4,14 @@ from utils import (
 import microlite
 mode = 1
 import jpglib
-import gc
+from config import (
+    MODELS_PATH,
+    IMAGES_PATH,
+    TMP_IMAGE_PATH
+    )
+import uos
 
-# TODO: Add logging and config validation
+# TODO: Add logging
 # TODO: Add model reloading option
 class ModelExecutor:
     def __init__(self, model, model_config, input_callback=None, output_callback=None):
@@ -24,6 +29,8 @@ class ModelExecutor:
         """
         input_tensor = microlite_interpreter.getInputTensor(0)
         
+        # 240x240 pixels image is being cropped to model size
+        # TODO:Make it responsive
         input_size = self.config.input_size
         row_bytes = 240*3
         model_width = self.config.width * 3
@@ -109,6 +116,8 @@ class Model:
     
 class ModelConfig:
     def __init__(self, model_config):
+        self.name = model_config['name']
+        
         self.width = model_config['image_width']
         self.height = model_config['image_height']
         self.channels = 3
@@ -138,3 +147,51 @@ class ModelConfig:
             self.labels.append(line.strip())
         file.close()
 
+class ModelManager:
+    def __init__(self, model_executor=None):
+        self.model_executor = model_executor
+        self.models_path = MODELS_PATH
+        self.images_path = IMAGES_PATH
+        self.current_image_path = TMP_IMAGE_PATH + '/image.jpg'
+        
+    def reload_model(self, model_executor):
+        """
+        Reload model with other initialized executor
+        :param model_executor: initialized model_executor with interpreter
+        """
+        self.model_executor = model_executor
+        
+    def predict_scenario(self):
+        """
+        Reload model with other initialized executor
+        :param image_path: path pointing to an image to predict on
+        """
+        image = mock_file_exchange()
+        # Save jpg to file
+        f = open(self.current_image_path, 'wb')
+        f.write(image)
+        f.close()
+        # Run prediction on the file
+        class_name = self.model_executor.predict(self.current_image_path)
+        # Rename and move the file
+        model_name = self.model_executor.config.name
+        classified_count = len(uos.listdir(self.images_path + '/' + model_name + '/' + class_name))
+        uos.rename(self.current_image_path, self.images_path + '/' + model_name + '/' + class_name + '/' + class_name + str(classified_count + 1) + '.jpg')
+
+    def create_model_scenario():
+        pass
+
+    def change_model_scenario():
+        pass
+
+    def send_models_info_scenario():
+        pass
+
+    def remove_model_scenario():
+        pass
+
+def mock_file_exchange():
+    src = open('mas.jpg', 'rb')
+    buf = src.read()
+    src.close()
+    return buf
