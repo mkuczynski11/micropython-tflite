@@ -28,8 +28,8 @@ async def main_loop():
             # Mock of ssid and password values
             password = "6SSGYAWT"
             app_manager.init_wifi_connection(ssid, password)
-        else:
-            model_manager.predict_scenario()
+#         else:
+#             model_manager.predict_scenario()
         
         msg_count += 1
         await asyncio.sleep(20)

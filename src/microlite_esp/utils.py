@@ -1,4 +1,5 @@
 import os
+import uos
 
 def get_file_size(path):
     """
@@ -7,6 +8,10 @@ def get_file_size(path):
     :return: file size in bytes
     """
     return os.stat(path)[6]
+
+def get_free_space(path):
+    stats = uos.statvfs(path)
+    return stats[1]*stats[3]
 
 def dims_to_size(dims):
     """

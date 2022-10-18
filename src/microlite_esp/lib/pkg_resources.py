@@ -22,7 +22,7 @@ def resource_stream(package, resource):
             _c[package] = d + "/"
 
     p = _c[package]
-    # NOTE: Added this in order to correctly GET jpeg items
+    # TODO: Added this in order to correctly GET jpeg items
     if "sd/static" in resource:
         p = "/"
     if isinstance(p, dict):

@@ -5,7 +5,8 @@ from config import (
     MICROSD_DIRECTORY,
     MODELS_PATH,
     IMAGES_PATH,
-    TMP_IMAGE_PATH
+    TMP_IMAGE_PATH,
+    TMP_MODEL_PATH
     )
 
 try:
@@ -30,6 +31,12 @@ except Exception as e:
     
 try:
     uos.mkdir(TMP_IMAGE_PATH)
+except Exception as e:
+    print("Couldn't create tmp image directory")
+    print("Error ocurred: " + str(e))
+    
+try:
+    uos.mkdir(TMP_MODEL_PATH)
 except Exception as e:
     print("Couldn't create tmp image directory")
     print("Error ocurred: " + str(e))

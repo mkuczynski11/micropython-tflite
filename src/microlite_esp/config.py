@@ -3,6 +3,7 @@ MICROSD_DIRECTORY = '/sd'
 MODELS_PATH = MICROSD_DIRECTORY + '/models'
 IMAGES_PATH = MICROSD_DIRECTORY + '/static/images'
 TMP_IMAGE_PATH = MICROSD_DIRECTORY + '/tmp'
+TMP_MODEL_PATH = MICROSD_DIRECTORY + '/tmp/model'
 
 # Model configuration
 # TODO: Move arena size to logic

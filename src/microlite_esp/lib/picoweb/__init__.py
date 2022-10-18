@@ -74,6 +74,11 @@ class HTTPRequest:
         data = yield from self.reader.readexactly(size)
         form = parse_qs(data.decode())
         self.form = form
+        
+    def read_form_byte_data(self):
+        size = int(self.headers[b"Content-Length"])
+        data = yield from self.reader.readexactly(size)
+        self.data = data
 
     def parse_qs(self):
         form = parse_qs(self.qs)
@@ -92,7 +97,7 @@ class WebApp:
         else:
             self.pkg = None
         if serve_static:
-            # NOTE: This line needed to change            
+            # TODO: This line needed to change            
             self.url_map.append((re.compile("^/(sd/static/.+)"), self.handle_static))
         self.mounts = []
         self.inited = False

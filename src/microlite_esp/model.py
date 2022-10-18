@@ -178,16 +178,10 @@ class ModelManager:
         classified_count = len(uos.listdir(self.images_path + '/' + model_name + '/' + class_name))
         uos.rename(self.current_image_path, self.images_path + '/' + model_name + '/' + class_name + '/' + class_name + str(classified_count + 1) + '.jpg')
 
-    def create_model_scenario():
-        pass
-
     def change_model_scenario():
         pass
 
     def send_models_info_scenario():
-        pass
-
-    def remove_model_scenario():
         pass
 
 def mock_file_exchange():
