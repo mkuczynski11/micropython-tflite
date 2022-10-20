@@ -4,9 +4,18 @@ import gc
 
 from config import IMAGES_PATH, MODELS_PATH, TMP_MODEL_PATH, MICROSD_DIRECTORY
 from utils import get_free_space
+from model import ModelManager
 
 # NOTE: None in order to pkg_resources to work
 app = picoweb.WebApp(None)
+
+@app.route('/predict')
+def predict(req, res):
+    model_manager = ModelManager()
+    model_manager.predict_scenario()
+    
+    yield from picoweb.start_response(res)
+    yield from res.awrite("Predict ended. ")
 
 @app.route('/')
 def index(req, res):
@@ -17,11 +26,12 @@ def index(req, res):
     <ul>
         <li><a href='images'>Images</a></li>
         <li><a href='models'>Models</a></li>
+        DEBUG:<a href='predict'>Predict</a>
     </ul>
 """)
 
 # NOTE: Running this required to change static folder in picoweb sources
-#TODO: Add option to download images
+# TODO: Add option to download images
 @app.route('/images')
 def images(req, res):
     req.parse_qs()
@@ -82,7 +92,7 @@ def image(req, res):
 def finish_create_model(req, res):
     if req.method != "POST":
         yield from picoweb.start_response(res, status="405")
-        yield from res.awrite("Only POST request accepted")
+        yield from res.awrite("Only POST request accepted. Back to <a href='/upload'>Upload page</a>")
     else:
         yield from req.read_form_data()
         try:
@@ -126,20 +136,22 @@ def finish_create_model(req, res):
             yield from picoweb.start_response(res, status="400")
             yield from res.awrite("Request was not complete. Consider creating model from <a href='/models'>Model list</a>.")
 
-# TODO: Check if user provided data
 @app.route('/continue')
 def continue_create_model(req, res):
     if req.method != "POST":
         yield from picoweb.start_response(res, status="405")
-        yield from res.awrite("Only POST request accepted")
+        yield from res.awrite("Only POST request accepted. Back to <a href='/upload'>Upload page</a>")
     else:
         try:
-            yield from req.read_form_byte_data()
+            size = int(req.headers[b"Content-Length"])
+            yield from req.read_form_byte_data(size)
             splitter = b'text/plain\r\n\r\n'
             second_splitter = b'\r\n------'
             labels_file = req.data.split(splitter)[1].split(second_splitter)[0]
             
             if len(labels_file) > get_free_space(MICROSD_DIRECTORY):
+                uos.remove(TMP_MODEL_PATH + '/labels.txt')
+                uos.remove(TMP_MODEL_PATH + '/model.tflite')
                 yield from picoweb.start_response(res, status="500")
                 yield from res.awrite("There is no space left on the device. Consider removing some models in <a href=models>models list</a>")
             else:
@@ -165,30 +177,47 @@ def continue_create_model(req, res):
             yield from picoweb.start_response(res, status="500")
             yield from res.awrite("Labels file is too big. Make sure that there is no model running and that your model meets requirements. Back to <a>Upload page</a>")
 
-# TODO: ModelManager should clear resources
-# TODO: Make user disable any running model
-# TODO: Check if user provided data
 @app.route('/create')
 def create_model(req, res):
     if req.method != "POST":
         yield from picoweb.start_response(res, status="405")
-        yield from res.awrite("Only POST request accepted")
+        yield from res.awrite("Only POST request accepted. Back to <a href='/upload'>Upload page</a>")
     else:
         try:
-            yield from req.read_form_byte_data()
+            f = open(TMP_MODEL_PATH + '/model.tflite', 'wb')
+            end_on = int(req.headers[b"Content-Length"]) - 46
             splitter = b'application/octet-stream\r\n\r\n'
-            second_splitter = b'\r\n------'
-            model_file = req.data.split(splitter)[1].split(second_splitter)[0]
+            buffer_size = 100_000
+            no_space_flag = False
+            print("File with size " + str(end_on))
+            print("Will read " + str(end_on // buffer_size) + " buffers with size " + str(buffer_size))
+
+            for i in range(0, end_on, buffer_size):
+                if (i + buffer_size) > end_on:
+                    print("Reading last " + str(end_on % buffer_size) + " bytes")
+                    yield from req.read_form_byte_data(end_on % buffer_size)
+                else:
+                    print("Reading " + str(i // buffer_size + 1) + " buffer")
+                    yield from req.read_form_byte_data(buffer_size)
+                    
+                if i == 0:
+                    req.data = req.data.split(splitter)[1]
+                    
+                if len(req.data) > get_free_space(MICROSD_DIRECTORY):
+                    no_space_flag = True
+                    f.close()
+                    uos.remove(TMP_MODEL_PATH + '/model.tflite')
+                    break
+                f.write(req.data)
+ 
+            yield from req.read_form_byte_data(46)
+            print("Read file")
+            f.close()
             
-            if len(model_file) > get_free_space(MICROSD_DIRECTORY):
+            if no_space_flag:
                 yield from picoweb.start_response(res, status="500")
                 yield from res.awrite("There is no space left on the device. Consider removing some models in <a href=models>models list</a>")
             else:
-                model_path = TMP_MODEL_PATH
-                f = open(model_path + '/model.tflite', 'wb')
-                f.write(model_file)
-                f.close()
-                
                 html = "<h1>Model uploaded. Please provide labels file.</h1>"
                 html += """
                 <form action='continue' enctype="multipart/form-data" method='POST'>
@@ -202,7 +231,8 @@ def create_model(req, res):
         except MemoryError:
             yield from picoweb.start_response(res, status="500")
             yield from res.awrite("Model is too big to run on this device. Make sure that there is no model running and that your model meets requirements. Back to <a>Upload page</a>")
-
+    
+    
 @app.route('/upload')
 def upload_form(req, res):
     html = "<h1>Post new model</h1>"
@@ -215,7 +245,52 @@ def upload_form(req, res):
     yield from picoweb.start_response(res, status="200")
     yield from res.awrite(html)
     
-# TODO: Create an option to enable/disable active model
+@app.route('/change')
+def change_model(req, res):
+    if req.method == "GET":
+        html = "<h1>Change active model</h1>"
+        html += """
+        <form action='change' method='POST'>
+        <label for='models'>Choose model:</label>
+        <select id='models' name='models' size=5>
+        """
+        
+        model_list = uos.listdir(MODELS_PATH)
+        
+        for model in model_list:
+            html += "<option value='" + model + "'>" + model + "</option>"
+    
+        html += """
+        <input type='submit' />
+        </form>
+        """
+        yield from picoweb.start_response(res, status="200")
+        yield from res.awrite(html)
+    elif req.method == "POST":
+        yield from req.read_form_data()
+        try:
+            model_name = req.form["models"]
+            
+            model_manager = ModelManager()
+            model_manager.load_from_path(MODELS_PATH + '/' + model_name)
+            
+            yield from picoweb.start_response(res, status="200")
+            yield from res.awrite("Successfully changed model to " + model_name + ". Back to <a href='/models'>Model list</a>")
+        except KeyError:
+            yield from picoweb.start_response(res, status="400")
+            yield from res.awrite("Request was not complete. Consider changing active model from <a href='/change'>Change page</a>.")
+    else:
+        yield from picoweb.start_response(res, status="405")
+        yield from res.awrite("Only POST and GET request accepted. Back to <a href='/models'>Model list</a>")
+    
+@app.route('/unload')
+def unload(req, res):
+    model_manager = ModelManager()
+    model_manager.unload_model()
+    
+    yield from picoweb.start_response(res, status="200")
+    yield from res.awrite("Model unloaded. Back to <a href='/models'>Model list</a>")
+
 @app.route('/models')
 def models(req, res):
     html = """
@@ -232,7 +307,16 @@ def models(req, res):
     <h1>Models</h1>
     <h2>Back to <a href=/>main page</a></h2>
     """
-    html += "<a href=upload> Add new model </a>"
+    model_manager = ModelManager()
+    active_model = model_manager.active_model_name
+    if active_model == None:
+        html+= "<h2>No active model. Pick one to enable classification.</h2>"
+    else:
+        html += "<h2>Currently active model is " + active_model + "</h2>"
+    
+    html += "<a href=upload> Add new model </a><br />"
+    html += "<a href=change> Change active model</a><br />"
+    html += "<a href=unload> Unload active model</a><br />"
     
     models_dirs = MODELS_PATH
     dirs = uos.listdir(models_dirs)

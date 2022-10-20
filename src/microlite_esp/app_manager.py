@@ -1,9 +1,11 @@
 import utime
 import network
 import ntptime
+from utils import singleton
 
+@singleton
 class AppManager:
-    def __init__(self, model_manager):
+    def __init__(self):
         self.ssid = ""
         self.password = ""
 

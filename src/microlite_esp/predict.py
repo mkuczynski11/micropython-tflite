@@ -8,16 +8,7 @@ import uasyncio as asyncio
 async def main_loop():
     print("Starting main loop")
     model_manager = ModelManager()
-    app_manager = AppManager(model_manager)
-    
-    # TODO: This should be created when user picks the model
-    model_config = ModelConfig(config)
-    model = Model(model_config.size, model_config.input_size)
-    model.read_model(model_config.path)
-    model_executor = ModelExecutor(model, model_config)
-    model_executor.init_interpreter()
-    
-    model_manager.reload_model(model_executor)
+    app_manager = AppManager()
     
     msg_count = 0
     while True:
@@ -29,7 +20,10 @@ async def main_loop():
             password = "6SSGYAWT"
             app_manager.init_wifi_connection(ssid, password)
 #         else:
-#             model_manager.predict_scenario()
+#             if model_manager.is_loaded():
+#                model_manager.predict_scenario()
+#             else:
+#                 print("model not loaded")            
         
         msg_count += 1
         await asyncio.sleep(20)

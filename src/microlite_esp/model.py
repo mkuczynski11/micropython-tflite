@@ -1,6 +1,7 @@
 from utils import (
     dims_to_size,
-    get_file_size)
+    get_file_size,
+    singleton)
 import microlite
 mode = 1
 import jpglib
@@ -12,7 +13,6 @@ from config import (
 import uos
 
 # TODO: Add logging
-# TODO: Add model reloading option
 class ModelExecutor:
     def __init__(self, model, model_config, input_callback=None, output_callback=None):
         self.model = model
@@ -115,7 +115,8 @@ class Model:
         self.input_buffer = None
     
 class ModelConfig:
-    def __init__(self, model_config):
+    def __init__(self, config_file_path):
+        model_config = self.read_config_file(config_file_path)
         self.name = model_config['name']
         
         self.width = model_config['image_width']
@@ -136,6 +137,21 @@ class ModelConfig:
         
         self.arena_size = model_config['arena_size']
         
+    def read_config_file(self, file_path):
+        config = {}
+        
+        config['name'] = file_path.split('/')[-2]
+        model_dir = file_path[0:file_path.rfind('/')]
+        config['path'] = model_dir + '/model.tflite'
+        config['labels_path'] = model_dir + '/labels.txt'
+        f = open(file_path)
+        lines = f.readlines()
+        config['image_width'] = int(lines[0])
+        config['image_height'] = int(lines[1])
+        config['arena_size'] = int(lines[2])
+        
+        return config
+        
     def read_labels(self):
         """
         Read labels from a given path into list.
@@ -147,12 +163,14 @@ class ModelConfig:
             self.labels.append(line.strip())
         file.close()
 
+@singleton
 class ModelManager:
     def __init__(self, model_executor=None):
         self.model_executor = model_executor
         self.models_path = MODELS_PATH
         self.images_path = IMAGES_PATH
         self.current_image_path = TMP_IMAGE_PATH + '/image.jpg'
+        self.active_model_name = None
         
     def reload_model(self, model_executor):
         """
@@ -160,6 +178,23 @@ class ModelManager:
         :param model_executor: initialized model_executor with interpreter
         """
         self.model_executor = model_executor
+        self.active_model_name = model_executor.config.name
+        
+    def unload_model(self):
+        self.model_executor = None
+        self.active_model_name = None
+        
+    def load_from_path(self, model_path):
+        model_config = ModelConfig(model_path + '/info.txt')
+        model = Model(model_config.size, model_config.input_size)
+        model.read_model(model_config.path)
+        model_executor = ModelExecutor(model, model_config)
+        model_executor.init_interpreter()
+        
+        self.reload_model(model_executor)
+        
+    def is_loaded(self):
+        return self.active_model_name != None
         
     def predict_scenario(self):
         """
