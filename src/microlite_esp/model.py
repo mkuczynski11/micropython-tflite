@@ -12,7 +12,6 @@ from config import (
     )
 import uos
 
-# TODO: Add logging
 class ModelExecutor:
     def __init__(self, model, model_config, input_callback=None, output_callback=None):
         self.model = model
@@ -169,7 +168,7 @@ class ModelManager:
         self.model_executor = model_executor
         self.models_path = MODELS_PATH
         self.images_path = IMAGES_PATH
-        self.current_image_path = TMP_IMAGE_PATH + '/image.jpg'
+        self.current_image_path = TMP_IMAGE_PATH
         self.active_model_name = None
         
     def reload_model(self, model_executor):

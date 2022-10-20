@@ -4,7 +4,7 @@ import ntptime
 import uos
 
 from utils import singleton
-from config import TMP_MODEL_PATH
+from config import TMP_MODEL_PATH_DIR, MODELS_PATH, IMAGES_PATH
 
 @singleton
 class AppManager:
@@ -42,9 +42,19 @@ class AppManager:
         self.clear_tmp_resources()
         
     def clear_tmp_resources(self):
-        for file in uos.listdir(TMP_MODEL_PATH):
-            uos.remove(TMP_MODEL_PATH + '/' + file)
+        for file in uos.listdir(TMP_MODEL_PATH_DIR):
+            uos.remove(TMP_MODEL_PATH_DIR + '/' + file)
         
     def is_able_to_create_model(self):
         return self.model_passed and self.labels_passed
+    
+    def remove_model(self):
+        for file in uos.listdir(MODELS_PATH + '/' + model):
+            uos.remove(MODELS_PATH + '/' + model + '/' + file)
+        uos.rmdir(MODELS_PATH + '/' + model)
+        for class_name in uos.listdir(IMAGES_PATH + '/' + model):
+            for file in uos.listdir(IMAGES_PATH + '/' + model + '/' + class_name):
+                uos.remove(IMAGES_PATH + '/' + model + '/' + class_name + '/' + file)
+            uos.rmdir(IMAGES_PATH + '/' + model + '/' + class_name)
+        uos.rmdir(IMAGES_PATH + '/' + model)
     

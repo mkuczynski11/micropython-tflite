@@ -2,7 +2,11 @@ import picoweb
 import uos
 import gc
 
-from config import IMAGES_PATH, MODELS_PATH, TMP_MODEL_PATH, MICROSD_DIRECTORY, MAX_MODEL_RAM_USAGE
+from config import (
+    IMAGES_PATH, MODELS_PATH, TMP_MODEL_PATH,
+    TMP_LABELS_PATH, TMP_INFO_PATH, TMP_MODEL_PATH_DIR,
+    MICROSD_DIRECTORY, MAX_MODEL_RAM_USAGE,
+    IMAGES_ON_PAGE)
 from utils import get_free_space, get_file_size
 from model import ModelManager
 from app_manager import AppManager
@@ -10,6 +14,7 @@ from app_manager import AppManager
 # NOTE: None in order to pkg_resources to work
 app = picoweb.WebApp(None)
 
+# NOTE: For debug purposes
 @app.route('/predict')
 def predict(req, res):
     model_manager = ModelManager()
@@ -30,45 +35,80 @@ def index(req, res):
         DEBUG:<a href='predict'>Predict</a>
     </ul>
 """)
+        
+async def show_models_for_images(res):
+    dirs = uos.listdir(IMAGES_PATH)
+    html = """
+            <h1>Image models</h1>
+            <h2><a href=/>Main page</a></h2>
+            """
+    if dirs:
+        html += "<ul>"
+        
+    for d in dirs:
+        html += f'<li><a href=images?model={d}>{d}</a></li>'
+    
+    if dirs:
+        html += "</ul>"
+        
+    yield from res.awrite(html)
+    
+async def show_classes(res, model):
+    class_dirs = IMAGES_PATH + '/' + model
+    dirs = uos.listdir(class_dirs)
+    
+    html = f'<h1>Classes for {model}</h1>'
+    html += "<h2><a href=images>Image models</a></h2>"
+    
+    if dirs:
+        html += "<ul>"
+        
+    for d in dirs:
+        html += f'<li><a href=images?model={model}&class={d}&page=1>{d}</a></li>'
+    
+    if dirs:
+        html += "</ul>"
+    yield from res.awrite(html)
+
+async def show_images(res, model, class_name, page):
+    files_dir = IMAGES_PATH + '/' + model + '/' + class_name
+    files = uos.listdir(files_dir)
+    
+    html = f'<h1>Images for {model} class {class_name}</h1>'
+    html += f'<h2>Back to <a href=images?model={model}>Classes for {model}</a></h2>'
+    if page > 1:
+        html += f'<h2><a href=images?model={model}&class={class_name}&page={page-1}>Previous page</a></h2>'
+    if page*IMAGES_ON_PAGE < len(files):
+        html += f'<h2><a href=images?model={model}&class={class_name}&page={page+1}>Next page</a></h2>'
+    yield from res.awrite(html)
+    
+    starting_index = (page - 1)*IMAGES_ON_PAGE
+    for i in range(min(IMAGES_ON_PAGE, len(files) - (page - 1)*IMAGES_ON_PAGE)):
+        file = files[starting_index + i]
+        yield from res.awrite(f'<a href=image?model={model}&class={class_name}&file={file}>{file}</a>: <img src="{files_dir + '/' + file}"><br />')
 
 # NOTE: Running this required to change static folder in picoweb sources
 # TODO: Add option to download images
+# TODO: Create option to view only file list
 @app.route('/images')
 def images(req, res):
     req.parse_qs()
     model = req.form.get('model', 'false')
     class_name = req.form.get('class', 'false')
+    page = req.form.get('page', 'false')
     
     yield from picoweb.start_response(res)
+    
     if class_name != 'false':
-        files_dir = IMAGES_PATH + '/' + model + '/' + class_name
-        files = uos.listdir(files_dir)
-        html = "<h1>Images for " + model + " class " + class_name + "</h1><h2>Back to <a href=images?model=" + model + ">image " + model + " list</a></h2>"
-        yield from res.awrite(html)
-        for file in files:
-            yield from res.awrite("<a href=image?model=" + model + "&class=" + class_name + "&file=" + file + ">" + file + "</a>" + ": <img src='" + files_dir + '/' + file + "'><br />")
+        if page == 'false':
+            page = 1
+        else:
+            page = int(page)
+        yield from show_images(res, model, class_name, page)
     elif model != 'false':
-        class_dirs = IMAGES_PATH + '/' + model
-        dirs = uos.listdir(class_dirs)
-        html = "<h1>Image " + model + " classes</h1><h2>Back to <a href=images>image models list</a></h2>"
-        if dirs:
-            html += "<ul>"
-        for d in dirs:
-            html += "<li><a href=images?model=" + model + "&class=" + d + ">" + d + "</a></li>"
-        if dirs:
-            html += "</ul>"
-        yield from res.awrite(html)
+        yield from show_classes(res, model)
     else:
-        models_dirs = IMAGES_PATH
-        dirs = uos.listdir(models_dirs)
-        html = "<h1>Image models</h1><h2>Back to <a href=/>main page</a></h2>"
-        if dirs:
-            html += "<ul>"
-        for d in dirs:
-            html += "<li><a href=images?model=" + d + ">" + d + "</a></li>"
-        if dirs:
-            html += "</ul>"
-        yield from res.awrite(html)
+        yield from show_models_for_images(res)
     
 @app.route('/image')
 def image(req, res):
@@ -108,14 +148,14 @@ def finish_create_model(req, res):
                 yield from picoweb.start_response(res, status="409")
                 yield from res.awrite("Please usse <a href='/upload'>Upload page</a> to add new model.")
             else:                
-                f = open(TMP_MODEL_PATH + '/info.txt', 'a')
+                f = open(TMP_INFO_PATH, 'a')
                 f.write(model_width + '\n')
                 f.write(model_height + '\n')
                 f.write(arena_size + '\n')
                 f.close()
                 
-                uos.rename(TMP_MODEL_PATH, MODELS_PATH + '/' + model_name)
-                uos.mkdir(TMP_MODEL_PATH)
+                uos.rename(TMP_MODEL_PATH_DIR, MODELS_PATH + '/' + model_name)
+                uos.mkdir(TMP_MODEL_PATH_DIR)
                 
                 uos.mkdir(IMAGES_PATH + '/' + model_name)
                 f = open(MODELS_PATH + '/' + model_name + '/labels.txt')
@@ -151,8 +191,7 @@ def continue_create_model(req, res):
             yield from picoweb.start_response(res, status="500")
             yield from res.awrite("There is no space left on the device. Consider removing some models in <a href=models>models list</a>")
         else:
-            model_path = TMP_MODEL_PATH
-            f = open(model_path + '/labels.txt', 'wb')
+            f = open(TMP_LABELS_PATH, 'wb')
             f.write(labels_file)
             f.close()
             
@@ -185,7 +224,7 @@ def create_model(req, res):
         app_manager.reset_model_creation()
         
         # TODO:Create function read_form_model_file
-        f = open(TMP_MODEL_PATH + '/model.tflite', 'wb')
+        f = open(TMP_MODEL_PATH, 'wb')
         end_on = int(req.headers[b"Content-Length"]) - 46
         splitter = b'application/octet-stream\r\n\r\n'
         buffer_size = 100_000
@@ -214,8 +253,8 @@ def create_model(req, res):
         f.close()
         
         # TODO:Create function write_form_model_info 
-        f = open(TMP_MODEL_PATH + '/info.txt', 'w')
-        model_size = get_file_size(TMP_MODEL_PATH + '/model.tflite')
+        f = open(TMP_INFO_PATH, 'w')
+        model_size = get_file_size(TMP_MODEL_PATH)
         f.write(str(model_size))
         f.close()
         
@@ -252,8 +291,8 @@ def upload_form(req, res):
 @app.route('/change')
 def change_model(req, res):
     if req.method == "GET":
-        html = "<h1>Change active model</h1>"
-        html += """
+        html = """
+        <h1>Change active model</h1>
         <form action='change' method='POST'>
         <label for='models'>Choose model:</label>
         <select id='models' name='models' size=5>
@@ -262,7 +301,7 @@ def change_model(req, res):
         model_list = uos.listdir(MODELS_PATH)
         
         for model in model_list:
-            html += "<option value='" + model + "'>" + model + "</option>"
+            html += f'<option value="{model}">{model}</option>'
     
         html += """
         <input type='submit' />
@@ -274,15 +313,16 @@ def change_model(req, res):
         yield from req.read_form_data()
         try:
             model_name = req.form["models"]
-            
-            model_manager = ModelManager()
-            model_manager.load_from_path(MODELS_PATH + '/' + model_name)
-            
-            yield from picoweb.start_response(res, status="200")
-            yield from res.awrite("Successfully changed model to " + model_name + ". Back to <a href='/models'>Model list</a>")
         except KeyError:
             yield from picoweb.start_response(res, status="400")
             yield from res.awrite("Request was not complete. Consider changing active model from <a href='/change'>Change page</a>.")
+            return
+            
+        model_manager = ModelManager()
+        model_manager.load_from_path(MODELS_PATH + '/' + model_name)
+        
+        yield from picoweb.start_response(res, status="200")
+        yield from res.awrite(f'Successfully changed model to {model_name}. Back to <a href="/models">Model list</a>')
     else:
         yield from picoweb.start_response(res, status="405")
         yield from res.awrite("Only POST and GET request accepted. Back to <a href='/models'>Model list</a>")
@@ -294,6 +334,20 @@ def unload(req, res):
     
     yield from picoweb.start_response(res, status="200")
     yield from res.awrite("Model unloaded. Back to <a href='/models'>Model list</a>")
+
+async def show_models(res):
+    dirs = uos.listdir(MODELS_PATH)
+    html = ""
+    if dirs:
+        html += "<ul>"
+        
+    for d in dirs:
+        html += f'<li>{d}<button onclick="confirmDeleteAction(this.name)" name={d}>Delete</button></li>'
+    
+    if dirs:
+        html += "</ul>"
+        
+    yield from res.awrite(html)
 
 @app.route('/models')
 def models(req, res):
@@ -311,8 +365,10 @@ def models(req, res):
     <h1>Models</h1>
     <h2>Back to <a href=/>main page</a></h2>
     """
+    
     model_manager = ModelManager()
     active_model = model_manager.active_model_name
+    
     if active_model == None:
         html+= "<h2>No active model. Pick one to enable classification.</h2>"
     else:
@@ -322,16 +378,10 @@ def models(req, res):
     html += "<a href=change> Change active model</a><br />"
     html += "<a href=unload> Unload active model</a><br />"
     
-    models_dirs = MODELS_PATH
-    dirs = uos.listdir(models_dirs)
-    if dirs:
-        html += "<ul>"
-    for d in dirs:
-        html += "<li>" + d + "<button onclick='confirmDeleteAction(this.name)' name=" + d + ">Delete</button>" + "</li>"
-    if dirs:
-        html += "</ul>"
     yield from picoweb.start_response(res, status="200")
     yield from res.awrite(html)
+    
+    yield from show_models(res)
 
 @app.route('/delete')
 def delete_model(req, res):
@@ -340,18 +390,14 @@ def delete_model(req, res):
     if model == 'false':
         yield from picoweb.start_response(res, status="400")
         yield from res.awrite("Please use <a href=models>Model list</a> to delete models.")
+        return
     elif model not in uos.listdir(MODELS_PATH) or model not in uos.listdir(IMAGES_PATH):
         yield from picoweb.start_response(res, status="400")
         yield from res.awrite("Model does not exist.Please use <a href='/models'>Model list</a> to delete models.")
-    else:
-        for file in uos.listdir(MODELS_PATH + '/' + model):
-            uos.remove(MODELS_PATH + '/' + model + '/' + file)
-        uos.rmdir(MODELS_PATH + '/' + model)
-        for d in uos.listdir(IMAGES_PATH + '/' + model):
-            for file in uos.listdir(IMAGES_PATH + '/' + model + '/' + d):
-                uos.remove(IMAGES_PATH + '/' + model + '/' + d + '/' + file)
-            uos.rmdir(IMAGES_PATH + '/' + model + '/' + d)
-        uos.rmdir(IMAGES_PATH + '/' + model)
-        
-        yield from picoweb.start_response(res, status="200")
-        yield from res.awrite("Model successfully deleted. Back to <a href='/models'>Model list</a>")
+        return
+    
+    app_manager = AppManager()
+    app_manager.remove_model(model)
+    
+    yield from picoweb.start_response(res, status="200")
+    yield from res.awrite("Model successfully deleted. Back to <a href='/models'>Model list</a>")
