@@ -1,5 +1,4 @@
-from config import config
-from model import ModelConfig, Model, ModelExecutor, ModelManager
+from model import ModelManager
 from app_manager import AppManager
 from app import app
 
@@ -18,15 +17,11 @@ async def main_loop():
             ssid = "UPC240648036"
             # Mock of ssid and password values
             password = "6SSGYAWT"
-            app_manager.init_wifi_connection(ssid, password)
-#         else:
-#             if model_manager.is_loaded():
-#                model_manager.predict_scenario()
-#             else:
-#                 print("model not loaded")            
+            app_manager.init_wifi_connection(ssid, password)          
         
         msg_count += 1
-        await asyncio.sleep(20)
+        await asyncio.sleep(1)
+        
         
     print("Ending main loop")
     

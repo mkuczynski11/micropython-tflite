@@ -2,9 +2,10 @@ import picoweb
 import uos
 import gc
 
-from config import IMAGES_PATH, MODELS_PATH, TMP_MODEL_PATH, MICROSD_DIRECTORY
-from utils import get_free_space
+from config import IMAGES_PATH, MODELS_PATH, TMP_MODEL_PATH, MICROSD_DIRECTORY, MAX_MODEL_RAM_USAGE
+from utils import get_free_space, get_file_size
 from model import ModelManager
+from app_manager import AppManager
 
 # NOTE: None in order to pkg_resources to work
 app = picoweb.WebApp(None)
@@ -90,6 +91,7 @@ def image(req, res):
 
 @app.route('/finish')
 def finish_create_model(req, res):
+    app_manager = AppManager()
     if req.method != "POST":
         yield from picoweb.start_response(res, status="405")
         yield from res.awrite("Only POST request accepted. Back to <a href='/upload'>Upload page</a>")
@@ -101,20 +103,12 @@ def finish_create_model(req, res):
             model_height = req.form["modelheight"]
             arena_size = req.form["arenasize"]
             
-            file_list = uos.listdir(TMP_MODEL_PATH)
-            if "labels.txt" not in file_list:
-                yield from picoweb.start_response(res, status="400")
-                yield from res.awrite("Labels file was not provided. Please use <a href='/models'>Model list</a> to add new model.")
-            elif "model.tflite" not in file_list:
-                yield from picoweb.start_response(res, status="400")
-                yield from res.awrite("Model file was not provided. Please use <a href='/models'>Model list</a> to add new model.")
-            elif len(file_list) != 2:
-                yield from picoweb.start_response(res, status="507")
-                yield from res.awrite("Model couldn't be created because of file system error. Please repeat adding model <a href='/models'>Model list</a>.")
-                for file in file_list:
-                    uos.remove(TMP_MODEL_PATH + '/' + file)
-            else:
-                f = open(TMP_MODEL_PATH + '/info.txt', 'w')
+            if not app_manager.is_able_to_create_model():
+                app_manager.reset_model_creation()
+                yield from picoweb.start_response(res, status="409")
+                yield from res.awrite("Please usse <a href='/upload'>Upload page</a> to add new model.")
+            else:                
+                f = open(TMP_MODEL_PATH + '/info.txt', 'a')
                 f.write(model_width + '\n')
                 f.write(model_height + '\n')
                 f.write(arena_size + '\n')
@@ -134,104 +128,114 @@ def finish_create_model(req, res):
                 yield from res.awrite("Model created. Back to <a href='/models'>Model list</a>.")
         except KeyError:
             yield from picoweb.start_response(res, status="400")
-            yield from res.awrite("Request was not complete. Consider creating model from <a href='/models'>Model list</a>.")
+            yield from res.awrite("Request was not complete. Consider creating model from <a href='/upload'>Upload page</a>.")
 
 @app.route('/continue')
 def continue_create_model(req, res):
+    app_manager = AppManager()
     if req.method != "POST":
         yield from picoweb.start_response(res, status="405")
         yield from res.awrite("Only POST request accepted. Back to <a href='/upload'>Upload page</a>")
+    elif app_manager.model_passed == False:
+        yield from picoweb.start_response(res, status="409")
+        yield from res.awrite("Please usse <a href='/upload'>Upload page</a> to add new model.")
     else:
-        try:
-            size = int(req.headers[b"Content-Length"])
-            yield from req.read_form_byte_data(size)
-            splitter = b'text/plain\r\n\r\n'
-            second_splitter = b'\r\n------'
-            labels_file = req.data.split(splitter)[1].split(second_splitter)[0]
-            
-            if len(labels_file) > get_free_space(MICROSD_DIRECTORY):
-                uos.remove(TMP_MODEL_PATH + '/labels.txt')
-                uos.remove(TMP_MODEL_PATH + '/model.tflite')
-                yield from picoweb.start_response(res, status="500")
-                yield from res.awrite("There is no space left on the device. Consider removing some models in <a href=models>models list</a>")
-            else:
-                model_path = TMP_MODEL_PATH
-                f = open(model_path + '/labels.txt', 'wb')
-                f.write(labels_file)
-                f.close()
-                
-                html = "<h1>Labels uploaded. Please provide model details.</h1>"
-                html += """
-                <form action='finish' method='POST'>
-                Model name: <input type='text' name='modelname' />
-                Model width: <input type='number' name='modelwidth' />
-                Model height: <input type='number' name='modelheight' />
-                Arena size: <input type='number' name='arenasize' />
-                <input type='submit' />
-                </form>
-                """
-                
-                yield from picoweb.start_response(res, status="200")
-                yield from res.awrite(html)
-        except MemoryError:
+        size = int(req.headers[b"Content-Length"])
+        yield from req.read_form_byte_data(size)
+        splitter = b'text/plain\r\n\r\n'
+        second_splitter = b'\r\n------'
+        labels_file = req.data.split(splitter)[1].split(second_splitter)[0]
+        
+        if len(labels_file) > get_free_space(MICROSD_DIRECTORY):
+            app_manager.reset_model_creation()
             yield from picoweb.start_response(res, status="500")
-            yield from res.awrite("Labels file is too big. Make sure that there is no model running and that your model meets requirements. Back to <a>Upload page</a>")
+            yield from res.awrite("There is no space left on the device. Consider removing some models in <a href=models>models list</a>")
+        else:
+            model_path = TMP_MODEL_PATH
+            f = open(model_path + '/labels.txt', 'wb')
+            f.write(labels_file)
+            f.close()
+            
+            app_manager.labels_passed = True
+            
+            html = "<h1>Labels uploaded. Please provide model details.</h1>"
+            html += """
+            <form action='finish' method='POST'>
+            Model name: <input type='text' name='modelname' />
+            Model width: <input type='number' name='modelwidth' />
+            Model height: <input type='number' name='modelheight' />
+            Arena size: <input type='number' name='arenasize' />
+            <input type='submit' />
+            </form>
+            """
+            
+            yield from picoweb.start_response(res, status="200")
+            yield from res.awrite(html)
 
 @app.route('/create')
 def create_model(req, res):
     if req.method != "POST":
         yield from picoweb.start_response(res, status="405")
         yield from res.awrite("Only POST request accepted. Back to <a href='/upload'>Upload page</a>")
+    elif int(req.headers[b"Content-Length"]) > MAX_MODEL_RAM_USAGE:
+        yield from picoweb.start_response(res, status="409")
+        yield from res.awrite("Model is too big. Maximum size of " + MAX_MODEL_RAM_USAGE + " bytes for the whole model is allowed. Back to <a href='/upload'>Upload page</a>")
     else:
-        try:
-            f = open(TMP_MODEL_PATH + '/model.tflite', 'wb')
-            end_on = int(req.headers[b"Content-Length"]) - 46
-            splitter = b'application/octet-stream\r\n\r\n'
-            buffer_size = 100_000
-            no_space_flag = False
-            print("File with size " + str(end_on))
-            print("Will read " + str(end_on // buffer_size) + " buffers with size " + str(buffer_size))
+        app_manager = AppManager()
+        app_manager.reset_model_creation()
+        
+        # TODO:Create function read_form_model_file
+        f = open(TMP_MODEL_PATH + '/model.tflite', 'wb')
+        end_on = int(req.headers[b"Content-Length"]) - 46
+        splitter = b'application/octet-stream\r\n\r\n'
+        buffer_size = 100_000
+        no_space_flag = False
+        print("File with size " + str(end_on))
+        print("Will read " + str(end_on // buffer_size) + " buffers with size " + str(buffer_size))
 
-            for i in range(0, end_on, buffer_size):
-                if (i + buffer_size) > end_on:
-                    print("Reading last " + str(end_on % buffer_size) + " bytes")
-                    yield from req.read_form_byte_data(end_on % buffer_size)
-                else:
-                    print("Reading " + str(i // buffer_size + 1) + " buffer")
-                    yield from req.read_form_byte_data(buffer_size)
-                    
-                if i == 0:
-                    req.data = req.data.split(splitter)[1]
-                    
-                if len(req.data) > get_free_space(MICROSD_DIRECTORY):
-                    no_space_flag = True
-                    f.close()
-                    uos.remove(TMP_MODEL_PATH + '/model.tflite')
-                    break
-                f.write(req.data)
- 
-            yield from req.read_form_byte_data(46)
-            print("Read file")
-            f.close()
-            
-            if no_space_flag:
-                yield from picoweb.start_response(res, status="500")
-                yield from res.awrite("There is no space left on the device. Consider removing some models in <a href=models>models list</a>")
+        for i in range(0, end_on, buffer_size):
+            if (i + buffer_size) > end_on:
+                print("Reading last " + str(end_on % buffer_size) + " bytes")
+                yield from req.read_form_byte_data(end_on % buffer_size)
             else:
-                html = "<h1>Model uploaded. Please provide labels file.</h1>"
-                html += """
-                <form action='continue' enctype="multipart/form-data" method='POST'>
-                Labels file: <input type='file' accept='.txt' name='labelsfile' />
-                <input type='submit' />
-                </form>
-                """
+                print("Reading " + str(i // buffer_size + 1) + " buffer")
+                yield from req.read_form_byte_data(buffer_size)
                 
-                yield from picoweb.start_response(res, status="200")
-                yield from res.awrite(html)
-        except MemoryError:
+            if i == 0:
+                req.data = req.data.split(splitter)[1]
+                
+            if len(req.data) > get_free_space(MICROSD_DIRECTORY):
+                no_space_flag = True
+                break
+            f.write(req.data)
+
+        yield from req.read_form_byte_data(46)
+        print("Read file")
+        f.close()
+        
+        # TODO:Create function write_form_model_info 
+        f = open(TMP_MODEL_PATH + '/info.txt', 'w')
+        model_size = get_file_size(TMP_MODEL_PATH + '/model.tflite')
+        f.write(str(model_size))
+        f.close()
+        
+        if no_space_flag:
+            app_manager.reset_model_creation()
             yield from picoweb.start_response(res, status="500")
-            yield from res.awrite("Model is too big to run on this device. Make sure that there is no model running and that your model meets requirements. Back to <a>Upload page</a>")
-    
+            yield from res.awrite("There is no space left on the device. Consider removing some models in <a href=models>models list</a>")
+        else:
+            app_manager.model_passed = True
+            
+            html = "<h1>Model uploaded. Please provide labels file.</h1>"
+            html += """
+            <form action='continue' enctype="multipart/form-data" method='POST'>
+            Labels file: <input type='file' accept='.txt' name='labelsfile' />
+            <input type='submit' />
+            </form>
+            """
+            
+            yield from picoweb.start_response(res, status="200")
+            yield from res.awrite(html)
     
 @app.route('/upload')
 def upload_form(req, res):
