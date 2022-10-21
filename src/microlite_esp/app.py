@@ -11,6 +11,7 @@ from config import (
 from utils import get_free_space, get_file_size
 from model import ModelManager
 from app_manager import AppManager
+import microlite
 
 # NOTE: None in order to pkg_resources to work
 app = picoweb.WebApp(None)
@@ -130,18 +131,19 @@ def image(req, res):
     yield from picoweb.start_response(res, "image/jpeg")
     yield from res.awrite(buf)
 
-# TODO: Find out how to validate arena size
 def validate_required_memory(model_width, model_height):
-    return 800_000
-#     # Memory left for arena size = max_usage - (model_size + image input size)
-#     arena_size_memory = MAX_MODEL_RAM_USAGE - (get_file_size(TMP_MODEL_PATH) + (model_width * model_height * 3))
-# 
-#     model = bytearray(get_file_size(TMP_MODEL_PATH))
-#     file = open(TMP_MODEL_PATH, 'rb')
-#     file.readinto(model)
-#     file.close()
-# 
-#     interpreter = microlite.interpreter(model, arena_size_memory, None, None)
+    # Memory left for arena size = max_usage - (model_size + image input size)
+    arena_size_memory = MAX_MODEL_RAM_USAGE - (get_file_size(TMP_MODEL_PATH) + (int(model_width) * int(model_height) * 3))
+
+    model = bytearray(get_file_size(TMP_MODEL_PATH))
+    file = open(TMP_MODEL_PATH, 'rb')
+    file.readinto(model)
+    file.close()
+    try:
+        interpreter = microlite.interpreter(model, arena_size_memory, None, None)
+        return arena_size_memory
+    except MemoryError:
+        return 0
 
 def write_model_info_to_file(model_width, model_height, arena_size):
     f = open(TMP_INFO_PATH, 'a')
@@ -152,7 +154,15 @@ def write_model_info_to_file(model_width, model_height, arena_size):
 
 @app.route('/finish')
 def finish_create_model(req, res):
-    if req.method != "POST":
+    model_manager = ModelManager()
+    if model_manager.is_loaded():
+        html = """
+        <h1>Please unload model in order to add new model. Click <a href=unload>here</a> to unload model.</h1>
+        """
+        yield from picoweb.start_response(res, status="200")
+        yield from res.awrite(html)
+        return
+    elif req.method != "POST":
         yield from picoweb.start_response(res, status="405")
         yield from res.awrite("Only POST request accepted. Back to <a href='/upload'>Upload page</a>")
         return
@@ -206,8 +216,15 @@ async def read_labels_byte_data_to_file(req):
 @app.route('/continue')
 def continue_create_model(req, res):
     app_manager = AppManager()
-    
-    if req.method != "POST":
+    model_manager = ModelManager()
+    if model_manager.is_loaded():
+        html = """
+        <h1>Please unload model in order to add new model. Click <a href=unload>here</a> to unload model.</h1>
+        """
+        yield from picoweb.start_response(res, status="200")
+        yield from res.awrite(html)
+        return
+    elif req.method != "POST":
         yield from picoweb.start_response(res, status="405")
         yield from res.awrite("Only POST request accepted. Back to <a href='/upload'>Upload page</a>")
         return
@@ -271,8 +288,16 @@ def write_model_size_to_file():
     f.close()
 
 @app.route('/create')
-def create_model(req, res):
-    if req.method != "POST":
+def create_model(req, res):   
+    model_manager = ModelManager()
+    if model_manager.is_loaded():
+        html = """
+        <h1>Please unload model in order to add new model. Click <a href=unload>here</a> to unload model.</h1>
+        """
+        yield from picoweb.start_response(res, status="200")
+        yield from res.awrite(html)
+        return
+    elif req.method != "POST":
         yield from picoweb.start_response(res, status="405")
         yield from res.awrite("Only POST request accepted. Back to <a href='/upload'>Upload page</a>")
         return
@@ -309,6 +334,15 @@ def create_model(req, res):
     
 @app.route('/upload')
 def upload_form(req, res):
+    model_manager = ModelManager()
+    if model_manager.is_loaded():
+        html = """
+        <h1>Please unload model in order to add new model. Click <a href=unload>here</a> to unload model.</h1>
+        """
+        yield from picoweb.start_response(res, status="200")
+        yield from res.awrite(html)
+        return
+    
     html = """
     <h1>Add new model</h1>
     <form action='create' enctype="multipart/form-data" method='POST'>

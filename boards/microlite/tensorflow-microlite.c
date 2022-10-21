@@ -342,7 +342,11 @@ STATIC mp_obj_t interpreter_make_new(const mp_obj_type_t *type, size_t n_args, s
 
     mp_printf(MP_PYTHON_PRINTER, "interpreter_make_new: model size = %d, tensor area = %d\n", self->model_data->len, tensor_area_len);
 
-    libtf_interpreter_init(self);
+    int result = libtf_interpreter_init(self);
+
+    if (result == 1) {
+        mp_raise_msg(&mp_type_MemoryError, "Interpreter initialization failed");
+    }
 
     return MP_OBJ_FROM_PTR(self);
 }

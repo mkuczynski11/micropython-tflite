@@ -11,25 +11,7 @@ def validate_required_memory(model_width, model_height):
     file = open('sd/models/muschrooms/model.tflite', 'rb')
     file.readinto(model)
     file.close()
-    
-    org_stdout = sys.stdout
-    
-    f = open(TMP_INTERPRETER_LOG_PATH, 'w')
-    
-    sys.stdout = f
+
     interpreter = microlite.interpreter(model, arena_size_memory, None, None)
-    sys.stdout = org_stdout
-    
-    f.close()
-        
-    f = open(TMP_INTERPRETER_LOG_PATH, 'r')
-    
-    lines = f.readlines()
-    if len(lines) > 1:
-        print('nie dobrze')
-    else:
-        print('git')
-    
-    f.close()
         
 validate_required_memory(224, 224)
