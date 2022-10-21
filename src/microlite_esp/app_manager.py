@@ -48,7 +48,7 @@ class AppManager:
     def is_able_to_create_model(self):
         return self.model_passed and self.labels_passed
     
-    def remove_model(self):
+    def remove_model(self, model):
         for file in uos.listdir(MODELS_PATH + '/' + model):
             uos.remove(MODELS_PATH + '/' + model + '/' + file)
         uos.rmdir(MODELS_PATH + '/' + model)
@@ -58,3 +58,16 @@ class AppManager:
             uos.rmdir(IMAGES_PATH + '/' + model + '/' + class_name)
         uos.rmdir(IMAGES_PATH + '/' + model)
     
+    def move_model_from_tmp_folder(self, model_name):
+        uos.rename(TMP_MODEL_PATH_DIR, MODELS_PATH + '/' + model_name)
+        uos.mkdir(TMP_MODEL_PATH_DIR)
+        
+        uos.mkdir(IMAGES_PATH + '/' + model_name)
+        f = open(MODELS_PATH + '/' + model_name + '/labels.txt')
+        lines = f.readlines()
+        for line in lines:
+            uos.mkdir(IMAGES_PATH + '/' + model_name + '/' + line.strip())
+        f.close()
+        
+        self.model_passed = False
+        self.labels_passed = False
