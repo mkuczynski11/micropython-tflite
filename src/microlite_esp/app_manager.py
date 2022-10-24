@@ -71,3 +71,28 @@ class AppManager:
         
         self.model_passed = False
         self.labels_passed = False
+        
+    def remove_images_for_model(self, model):
+        dirs = uos.listdir(IMAGES_PATH)
+        if model not in dirs:
+            return False
+        
+        for class_name in uos.listdir(f'{IMAGES_PATH}/{model}'):
+            for f in uos.listdir(f'{IMAGES_PATH}/{model}/{class_name}'):
+                uos.remove(f'{IMAGES_PATH}/{model}/{class_name}/{f}')
+                
+        return True
+    
+    def remove_images_for_class(self, model, class_name):
+        dirs = uos.listdir(IMAGES_PATH)
+        if model not in dirs:
+            return False
+        
+        class_dirs = uos.listdir(f'{IMAGES_PATH}/{model}')
+        if class_name not in class_dirs:
+            return False
+        
+        for f in uos.listdir(f'{IMAGES_PATH}/{model}/{class_name}'):
+            uos.remove(f'{IMAGES_PATH}/{model}/{class_name}/{f}')
+            
+        return True

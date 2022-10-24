@@ -37,13 +37,45 @@ def index(req, res):
         DEBUG:<a href='predict'>Predict</a>
     </ul>
 """)
+    
+@app.route('/delete_images')
+def delete_images(req, res):
+    app_manager = AppManager()
+    req.parse_qs()
+    model = req.form.get('model', 'false')
+    class_name = req.form.get('class', 'false')
+    if class_name != 'false' and model != 'false':
+        ok = app_manager.remove_images_for_class(model, class_name)
+        if not ok:
+            yield from picoweb.start_response(res, status="400")
+            yield from res.awrite(f'{model}/{class_name} does not exist. Back to <a href=/>main page</a>')
+            return
+    elif model != 'false':
+        ok = app_manager.remove_images_for_model(model)
+        if not ok:
+            yield from picoweb.start_response(res, status="400")
+            yield from res.awrite(f'{model} does not exist. Back to <a href=/>main page</a>')
+            return
+    
+    yield from picoweb.start_response(res, status="200")
+    yield from res.awrite("Images successfully deleted. Back to <a href='/images'>Images list</a>")
         
 async def show_models_for_images(res):
-    dirs = uos.listdir(IMAGES_PATH)
     html = """
-            <h1>Image models</h1>
-            <h2><a href=/>Main page</a></h2>
-            """
+    <head>
+    <script>
+    function confirmDeleteAction(name) {
+        if (window.confirm("Are you sure you want to delete images for:" + name + " ?")) {
+            var lastIndex = window.location.href.lastIndexOf("/");
+            window.location.href = window.location.href.slice(0, lastIndex+1) + "delete_images?model=" + name;
+        }
+    }
+    </script>
+    </head>
+    <h1>Image models</h1>
+    <h2><a href=/>Main page</a></h2>
+    """
+    dirs = uos.listdir(IMAGES_PATH)
     if dirs:
         html += "<ul>"
         
@@ -51,7 +83,7 @@ async def show_models_for_images(res):
         image_count = 0
         for class_dir in uos.listdir(f'{IMAGES_PATH}/{d}'):
             image_count += len(uos.listdir(f'{IMAGES_PATH}/{d}/{class_dir}'))
-        html += f'<li><a href=images?model={d}>{d}</a>: {image_count} Images</li>'
+        html += f'<li><a href=images?model={d}>{d}</a>: {image_count} Images<button onclick="confirmDeleteAction(this.name)" name={d}>Delete images</button></li>'
     
     if dirs:
         html += "</ul>"
@@ -59,10 +91,26 @@ async def show_models_for_images(res):
     yield from res.awrite(html)
     
 async def show_classes(res, model):
+    html = """
+    <head>
+    <script>
+    function confirmDeleteAction(name) {
+        if (window.confirm("Are you sure you want to delete images for:" + name + " ?")) {
+            var lastIndex = window.location.href.lastIndexOf("/");
+            var slashIndex = name.lastIndexOf("/");
+            var model = name.slice(0, slashIndex);
+            var class_name = name.slice(slashIndex+1);
+            window.location.href = window.location.href.slice(0, lastIndex+1) + "delete_images?model=" + model + "&class=" + class_name;        }
+    }
+    </script>
+    </head>
+    <h1>Image models</h1>
+    <h2><a href=/>Main page</a></h2>
+    """
     class_dirs = IMAGES_PATH + '/' + model
     dirs = uos.listdir(class_dirs)
     
-    html = f'<h1>Classes for {model}</h1>'
+    html += f'<h1>Classes for {model}</h1>'
     html += "<h2><a href=images>Image models</a></h2>"
     
     if dirs:
@@ -70,7 +118,7 @@ async def show_classes(res, model):
         
     for d in dirs:
         image_count = len(uos.listdir(f'{IMAGES_PATH}/{model}/{d}'))
-        html += f'<li><a href=images?model={model}&class={d}&page=1>{d}</a>: {image_count} Images</li>'
+        html += f'<li><a href=images?model={model}&class={d}&page=1>{d}</a>: {image_count} Images<button onclick="confirmDeleteAction(this.name)" name={model}/{d}>Delete Images</button></li>'
     
     if dirs:
         html += "</ul>"
