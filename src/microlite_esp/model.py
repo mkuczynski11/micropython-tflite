@@ -28,17 +28,10 @@ class ModelExecutor:
         """
         input_tensor = microlite_interpreter.getInputTensor(0)
         
-        # 240x240 pixels image is being cropped to model size
-        # TODO:Make it responsive
-        input_size = self.config.input_size
-        row_bytes = 240*3
-        model_width = self.config.width * 3
-        y_offset = (240 - self.config.height)//2 * row_bytes
-        x_offset = (row_bytes - model_width)//2
+        input_size = self.config.width * self.config.height * 3
         
         for i in range (0, input_size):
-            buffer_index = ((x_offset) + i%model_width + (i//model_width)*row_bytes) + y_offset
-            input_tensor.setValue(i, self.model.input_buffer[buffer_index])
+            input_tensor.setValue(i, self.model.input_buffer[i])
             
         print ("setup %d bytes on the inputTensor." % (input_size))
     
@@ -75,6 +68,7 @@ class ModelExecutor:
         :param image_path: path pointing to an image to predict on
         """
         self.model.read_jpg(image_path)
+        self.model.resize_input(self.config.width, self.config.height, 240, 240)
         self.interpreter.invoke()
         return self.predicted_class
         
@@ -106,6 +100,9 @@ class Model:
         :param file_path: file to be loaded
         """
         size, self.input_buffer, _, _ = jpglib.decompress_jpg(file_path)
+        
+    def resize_input(self, out_w, out_h, src_w, src_h):
+        self.input_buffer = jpglib.resize_img(self.input_buffer, out_w, out_h, src_w, src_h)
         
     def reset_input_buffer(self):
         """
@@ -219,7 +216,7 @@ class ModelManager:
         pass
 
 def mock_file_exchange():
-    src = open('mas.jpg', 'rb')
+    src = open('sd/static/images/muschrooms/Suillus/Suillus1.jpg', 'rb')
     buf = src.read()
     src.close()
     return buf

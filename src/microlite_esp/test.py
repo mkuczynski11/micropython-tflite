@@ -1,17 +1,13 @@
-from utils import get_file_size
-import microlite
-import sys
-from config import TMP_INTERPRETER_LOG_PATH
+import jpglib
 
-def validate_required_memory(model_width, model_height):
-    # Memory left for arena size = max_usage - (model_size + image input size)
-    arena_size_memory = 100_000
+size, buf, _, _ = jpglib.decompress_jpg('sd/static/images/muschrooms/Suillus/Suillus1.jpg')
 
-    model = bytearray(get_file_size('sd/models/muschrooms/model.tflite'))
-    file = open('sd/models/muschrooms/model.tflite', 'rb')
-    file.readinto(model)
-    file.close()
+buf = jpglib.resize_img(buf, 100, 100, 240, 240)
 
-    interpreter = microlite.interpreter(model, arena_size_memory, None, None)
-        
-validate_required_memory(224, 224)
+print(len(buf))
+
+f = open('obraz', 'wb')
+
+f.write(buf)
+
+f.close()

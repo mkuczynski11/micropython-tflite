@@ -48,7 +48,10 @@ async def show_models_for_images(res):
         html += "<ul>"
         
     for d in dirs:
-        html += f'<li><a href=images?model={d}>{d}</a></li>'
+        image_count = 0
+        for class_dir in uos.listdir(f'{IMAGES_PATH}/{d}'):
+            image_count += len(uos.listdir(f'{IMAGES_PATH}/{d}/{class_dir}'))
+        html += f'<li><a href=images?model={d}>{d}</a>: {image_count} Images</li>'
     
     if dirs:
         html += "</ul>"
@@ -66,7 +69,8 @@ async def show_classes(res, model):
         html += "<ul>"
         
     for d in dirs:
-        html += f'<li><a href=images?model={model}&class={d}&page=1>{d}</a></li>'
+        image_count = len(uos.listdir(f'{IMAGES_PATH}/{model}/{d}'))
+        html += f'<li><a href=images?model={model}&class={d}&page=1>{d}</a>: {image_count} Images</li>'
     
     if dirs:
         html += "</ul>"
