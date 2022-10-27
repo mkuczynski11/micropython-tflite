@@ -140,7 +140,7 @@ class ModelConfig:
         model_dir = file_path[0:file_path.rfind('/')]
         config['path'] = model_dir + '/model.tflite'
         config['labels_path'] = model_dir + '/labels.txt'
-        f = open(file_path)
+        f = open(file_path, 'r')
         lines = f.readlines()
         config['image_width'] = int(lines[0])
         config['image_height'] = int(lines[1])
@@ -180,8 +180,8 @@ class ModelManager:
         self.model_executor = None
         self.active_model_name = None
         
-    def load_from_path(self, model_path):
-        model_config = ModelConfig(model_path + '/info.txt')
+    def load_model(self, model_name):
+        model_config = ModelConfig(f'{MODELS_PATH}/{model_name}/info.txt')
         model = Model(model_config.size, model_config.input_size)
         model.read_model(model_config.path)
         model_executor = ModelExecutor(model, model_config)
@@ -192,6 +192,7 @@ class ModelManager:
     def is_loaded(self):
         return self.active_model_name != None
         
+    # TODO:Remove when communication via ESP-NOW is done
     def predict_scenario(self):
         """
         Reload model with other initialized executor
@@ -209,14 +210,9 @@ class ModelManager:
         classified_count = len(uos.listdir(self.images_path + '/' + model_name + '/' + class_name))
         uos.rename(self.current_image_path, self.images_path + '/' + model_name + '/' + class_name + '/' + class_name + str(classified_count + 1) + '.jpg')
 
-    def change_model_scenario():
-        pass
-
-    def send_models_info_scenario():
-        pass
-
+# TODO:Remove when communication via ESP-NOW is done
 def mock_file_exchange():
-    src = open('sd/static/images/muschrooms/Suillus/Suillus1.jpg', 'rb')
+    src = open('image.jpg', 'rb')
     buf = src.read()
     src.close()
     return buf
