@@ -18,7 +18,7 @@ IMAGES_ON_PAGE = 5
 
 # Model upload constants
 BUFFER_SIZE = 100_000
-MODEL_REQUEST_END_LEGTH = 46
+MODEL_REQUEST_END_LENGTH = 46
 FILE_STREAM_SPLITTER = b'application/octet-stream\r\n\r\n'
 TEXT_SPLITTER = b'text/plain\r\n\r\n'
 BYTE_CONTENT_END_SPLITTER = b'\r\n------'

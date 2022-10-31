@@ -1,7 +1,7 @@
 import picoweb
 
 from config import (
-    IMAGES_ON_PAGE, BUFFER_SIZE, MODEL_REQUEST_END_LEGTH,
+    IMAGES_ON_PAGE, BUFFER_SIZE, MODEL_REQUEST_END_LENGTH,
     FILE_STREAM_SPLITTER, TEXT_SPLITTER, BYTE_CONTENT_END_SPLITTER)
 from model import ModelManager
 from app_manager import AppManager, ResponseCode
@@ -290,7 +290,7 @@ def continue_create_model(req, res):
 
 async def read_model_byte_data_to_file(req):
     app_manager = AppManager()
-    final_index = int(req.headers[b"Content-Length"]) - MODEL_REQUEST_END_LEGTH
+    final_index = int(req.headers[b"Content-Length"]) - MODEL_REQUEST_END_LENGTH
     print(f'Will read {str(final_index // BUFFER_SIZE)} buffers with size {str(BUFFER_SIZE)}')
     for i in range(0, final_index, BUFFER_SIZE):
         if (i + BUFFER_SIZE) > final_index:
@@ -307,7 +307,7 @@ async def read_model_byte_data_to_file(req):
         if code != ResponseCode.OK:
             return code
             
-    yield from req.read_form_byte_data(MODEL_REQUEST_END_LEGTH)
+    yield from req.read_form_byte_data(MODEL_REQUEST_END_LENGTH)
     print("Read file")
     return code
 
