@@ -12,7 +12,6 @@ from config import (
     )
 import uos
 
-# TODO: Add logging
 class ModelExecutor:
     def __init__(self, model, model_config, input_callback=None, output_callback=None):
         self.model = model
@@ -29,17 +28,10 @@ class ModelExecutor:
         """
         input_tensor = microlite_interpreter.getInputTensor(0)
         
-        # 240x240 pixels image is being cropped to model size
-        # TODO:Make it responsive
-        input_size = self.config.input_size
-        row_bytes = 240*3
-        model_width = self.config.width * 3
-        y_offset = (240 - self.config.height)//2 * row_bytes
-        x_offset = (row_bytes - model_width)//2
+        input_size = self.config.width * self.config.height * 3
         
         for i in range (0, input_size):
-            buffer_index = ((x_offset) + i%model_width + (i//model_width)*row_bytes) + y_offset
-            input_tensor.setValue(i, self.model.input_buffer[buffer_index])
+            input_tensor.setValue(i, self.model.input_buffer[i])
             
         print ("setup %d bytes on the inputTensor." % (input_size))
     
@@ -76,6 +68,7 @@ class ModelExecutor:
         :param image_path: path pointing to an image to predict on
         """
         self.model.read_jpg(image_path)
+        self.model.resize_input(self.config.width, self.config.height, 240, 240)
         self.interpreter.invoke()
         return self.predicted_class
         
@@ -107,6 +100,9 @@ class Model:
         :param file_path: file to be loaded
         """
         size, self.input_buffer, _, _ = jpglib.decompress_jpg(file_path)
+        
+    def resize_input(self, out_w, out_h, src_w, src_h):
+        self.input_buffer = jpglib.resize_img(self.input_buffer, out_w, out_h, src_w, src_h)
         
     def reset_input_buffer(self):
         """
@@ -144,7 +140,7 @@ class ModelConfig:
         model_dir = file_path[0:file_path.rfind('/')]
         config['path'] = model_dir + '/model.tflite'
         config['labels_path'] = model_dir + '/labels.txt'
-        f = open(file_path)
+        f = open(file_path, 'r')
         lines = f.readlines()
         config['image_width'] = int(lines[0])
         config['image_height'] = int(lines[1])
@@ -169,7 +165,7 @@ class ModelManager:
         self.model_executor = model_executor
         self.models_path = MODELS_PATH
         self.images_path = IMAGES_PATH
-        self.current_image_path = TMP_IMAGE_PATH + '/image.jpg'
+        self.current_image_path = TMP_IMAGE_PATH
         self.active_model_name = None
         
     def reload_model(self, model_executor):
@@ -184,8 +180,8 @@ class ModelManager:
         self.model_executor = None
         self.active_model_name = None
         
-    def load_from_path(self, model_path):
-        model_config = ModelConfig(model_path + '/info.txt')
+    def load_model(self, model_name):
+        model_config = ModelConfig(f'{MODELS_PATH}/{model_name}/info.txt')
         model = Model(model_config.size, model_config.input_size)
         model.read_model(model_config.path)
         model_executor = ModelExecutor(model, model_config)
@@ -196,6 +192,7 @@ class ModelManager:
     def is_loaded(self):
         return self.active_model_name != None
         
+    # TODO:Remove when communication via ESP-NOW is done
     def predict_scenario(self):
         """
         Reload model with other initialized executor
@@ -213,14 +210,9 @@ class ModelManager:
         classified_count = len(uos.listdir(self.images_path + '/' + model_name + '/' + class_name))
         uos.rename(self.current_image_path, self.images_path + '/' + model_name + '/' + class_name + '/' + class_name + str(classified_count + 1) + '.jpg')
 
-    def change_model_scenario():
-        pass
-
-    def send_models_info_scenario():
-        pass
-
+# TODO:Remove when communication via ESP-NOW is done
 def mock_file_exchange():
-    src = open('mas.jpg', 'rb')
+    src = open('image.jpg', 'rb')
     buf = src.read()
     src.close()
     return buf

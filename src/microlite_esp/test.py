@@ -1,2 +1,11 @@
-for i in range(0, 300_002, 100_000):
-    print(i)
+f = open('sd/static/images/muschrooms/Suillus/Suillus1.jpg', 'w')
+
+f.write("aaaa")
+
+f.close()
+
+f = open('sd/static/images/muschrooms/Boletus/Boletus.jpg', 'w')
+
+f.write("aaaa")
+
+f.close()
