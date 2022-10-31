@@ -9,6 +9,7 @@ sta_if.connect(ssid, password)
 # Then run
 #
 import upip
+upip.install('micropython-enum')
 upip.install('picoweb')
 upip.install('micropython-ulogging') # TODO:REMOVE
 upip.install('ujson')
