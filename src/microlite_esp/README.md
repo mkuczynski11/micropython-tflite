@@ -41,7 +41,6 @@ This files are
 - predict.py - example main function
 - utils.py - utility functions  
 Flash them into esp32-cam flash memory using `rshell` or any other software of your choice.  
-TODO:Make guide to config.py  
 *NOTE:* If you did not follow point 1 step then you will need to change some details in config.py file.
 ### 3. Exporting model into memory
 If you have microsd card reader then simply copy the model that you downloaded early into sd card, but if that is not the case then we recommend flashing model into esp32-cam flash memory and copy it into microsd card memory using `copy_file` function from `utils.py` file. The file that represents our model should have `.tflite` extension and be named after cnn_feature_vector so in our example `mobilenet_v1_025_224.tflite`

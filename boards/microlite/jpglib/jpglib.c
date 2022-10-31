@@ -17,6 +17,9 @@
 /* Bytes per pixel of image output */
 #define N_BPP (3 - JD_FORMAT)
 
+#define DL_IMAGE_MIN(A, B) ((A) < (B) ? (A) : (B))
+#define DL_IMAGE_MAX(A, B) ((A) < (B) ? (B) : (A))
+
 
 /* Session identifier for input/output functions (name, members and usage are as user defined) */
 typedef struct {
@@ -80,13 +83,142 @@ static int out_crop( // 1:Ok, 0:Aborted
     return 1;    /* Continue to decompress */
 }
 
+void image_zoom_in_twice(uint8_t *dimage,
+                         int dw,
+                         int dh,
+                         int dc,
+                         uint8_t *simage,
+                         int sw,
+                         int sc)
+{
+    for (int dyi = 0; dyi < dh; dyi++)
+    {
+        int _di = dyi * dw;
+
+        int _si0 = dyi * 2 * sw;
+        int _si1 = _si0 + sw;
+
+        for (int dxi = 0; dxi < dw; dxi++)
+        {
+            int di = (_di + dxi) * dc;
+            int si0 = (_si0 + dxi * 2) * sc;
+            int si1 = (_si1 + dxi * 2) * sc;
+
+            if (1 == dc)
+            {
+                dimage[di] = (uint8_t)((simage[si0] + simage[si0 + 1] + simage[si1] + simage[si1 + 1]) >> 2);
+            }
+            else if (3 == dc)
+            {
+                dimage[di] = (uint8_t)((simage[si0] + simage[si0 + 3] + simage[si1] + simage[si1 + 3]) >> 2);
+                dimage[di + 1] = (uint8_t)((simage[si0 + 1] + simage[si0 + 4] + simage[si1 + 1] + simage[si1 + 4]) >> 2);
+                dimage[di + 2] = (uint8_t)((simage[si0 + 2] + simage[si0 + 5] + simage[si1 + 2] + simage[si1 + 5]) >> 2);
+            }
+            else
+            {
+                for (int dci = 0; dci < dc; dci++)
+                {
+                    dimage[di + dci] = (uint8_t)((simage[si0 + dci] + simage[si0 + 3 + dci] + simage[si1 + dci] + simage[si1 + 3 + dci] + 2) >> 2);
+                }
+            }
+        }
+    }
+    return;
+}
+
+void image_resize_linear(uint8_t *dst_image, uint8_t *src_image, int dst_w, int dst_h, int dst_c, int src_w, int src_h)
+{ /*{{{*/
+    float scale_x = (float)src_w / dst_w;
+    float scale_y = (float)src_h / dst_h;
+
+    int dst_stride = dst_c * dst_w;
+    int src_stride = dst_c * src_w;
+
+    if (fabs(scale_x - 2) <= 1e-6 && fabs(scale_y - 2) <= 1e-6)
+    {
+        image_zoom_in_twice(
+            dst_image,
+            dst_w,
+            dst_h,
+            dst_c,
+            src_image,
+            src_w,
+            dst_c);
+    }
+    else
+    {
+        for (int y = 0; y < dst_h; y++)
+        {
+            float fy[2];
+            fy[0] = (float)((y + 0.5) * scale_y - 0.5); // y
+            int src_y = (int)fy[0];                     // y1
+            fy[0] -= src_y;                             // y - y1
+            fy[1] = 1 - fy[0];                          // y2 - y
+            src_y = DL_IMAGE_MAX(0, src_y);
+            src_y = DL_IMAGE_MIN(src_y, src_h - 2);
+
+            for (int x = 0; x < dst_w; x++)
+            {
+                float fx[2];
+                fx[0] = (float)((x + 0.5) * scale_x - 0.5); // x
+                int src_x = (int)fx[0];                     // x1
+                fx[0] -= src_x;                             // x - x1
+                if (src_x < 0)
+                {
+                    fx[0] = 0;
+                    src_x = 0;
+                }
+                if (src_x > src_w - 2)
+                {
+                    fx[0] = 0;
+                    src_x = src_w - 2;
+                }
+                fx[1] = 1 - fx[0]; // x2 - x
+
+                for (int c = 0; c < dst_c; c++)
+                {
+                    dst_image[y * dst_stride + x * dst_c + c] = round(src_image[src_y * src_stride + src_x * dst_c + c] * fx[1] * fy[1] + src_image[src_y * src_stride + (src_x + 1) * dst_c + c] * fx[0] * fy[1] + src_image[(src_y + 1) * src_stride + src_x * dst_c + c] * fx[1] * fy[0] + src_image[(src_y + 1) * src_stride + (src_x + 1) * dst_c + c] * fx[0] * fy[0]);
+                }
+            }
+        }
+    }
+} /*}}}*/
+
+STATIC mp_obj_t jpglib_resize_img(size_t n_args, const mp_obj_t *args)
+{
+	mp_buffer_info_t buf_info;
+	mp_get_buffer_raise(args[0], &buf_info, MP_BUFFER_READ);
+	mp_int_t out_w = mp_obj_get_int(args[1]);
+	mp_int_t out_h = mp_obj_get_int(args[2]);
+	mp_int_t src_w = mp_obj_get_int(args[3]);
+	mp_int_t src_h = mp_obj_get_int(args[4]);
+
+	int channels = 3;
+
+	int resized_size = out_w*out_h*channels;
+	uint8_t* resized_image = m_malloc(resized_size);
+	if (!resized_image) {
+		mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT("out of memory"));
+	}
+
+	image_resize_linear(resized_image, buf_info.buf, out_w, out_h, channels, src_w, src_h);
+
+	mp_obj_t result = mp_obj_new_bytearray(resized_size, (mp_obj_t*) resized_image);
+
+	m_free(resized_image);
+
+	return result;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(jpglib_resize_img_obj, 5, 5, jpglib_resize_img);
+
 STATIC mp_obj_t jpglib_decompress_jpg(mp_obj_t name_param)
 {
     const char *filename;
     void *work;                 // work buffer for jpg & png decoding
 	size_t sz_work = 3500; /* Size of work area */
     mp_file_t *fp;				// file object
-	uint16_t *i2c_buffer;		// resident buffer if buffer_size given
+	uint16_t *rgb_buffer;		// buffer for rgb888 image
 	mp_int_t x = 0, y = 0, width = 0, height = 0;
     
     filename = mp_obj_str_get_str(name_param);
@@ -109,14 +241,14 @@ STATIC mp_obj_t jpglib_decompress_jpg(mp_obj_t name_param)
 
                 // Initialize output device
                 bufsize = N_BPP * jdec.width * jdec.height;	/* Create frame buffer for output image */
-				i2c_buffer = m_malloc(bufsize);
-				if (i2c_buffer) {
-					memset(i2c_buffer, 0xBEEF, bufsize);
+				rgb_buffer = m_malloc(bufsize);
+				if (rgb_buffer) {
+					memset(rgb_buffer, 0xBEEF, bufsize);
 				} else {
 					mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT("out of memory"));
 				}
 
-                devid.fbuf	= (uint8_t *)i2c_buffer;
+                devid.fbuf	= (uint8_t *)rgb_buffer;
 				devid.wfbuf = jdec.width;
 
 				res = jd_decomp(&jdec, out_crop, 0); /* Start to decompress with 1/1 scaling */
@@ -131,10 +263,12 @@ STATIC mp_obj_t jpglib_decompress_jpg(mp_obj_t name_param)
     m_free(work); // Discard work area
     mp_obj_t result[4] = {
 			mp_obj_new_int(bufsize),
-			mp_obj_new_bytearray(bufsize, (mp_obj_t *) i2c_buffer),
+			mp_obj_new_bytearray(bufsize, (mp_obj_t *) rgb_buffer),
 			mp_obj_new_int(width),
 			mp_obj_new_int(height)
 		};
+
+	m_free(rgb_buffer); // Discard rgb888 buffer since it was copied to result
 
     return mp_obj_new_tuple(4, result);
 }
@@ -143,7 +277,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(jpglib_decompress_jpg_obj, jpglib_decompress_jp
 
 STATIC const mp_map_elem_t jpglib_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_jpglib)},
-    {MP_ROM_QSTR(MP_QSTR_decompress_jpg), (mp_obj_t) &jpglib_decompress_jpg_obj}
+    {MP_ROM_QSTR(MP_QSTR_decompress_jpg), (mp_obj_t) &jpglib_decompress_jpg_obj},
+    {MP_ROM_QSTR(MP_QSTR_resize_img), (mp_obj_t) &jpglib_resize_img_obj}
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_jpglib_globals, jpglib_module_globals_table);
