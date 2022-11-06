@@ -9,11 +9,12 @@ TMP_MODEL_PATH = MICROSD_DIRECTORY + '/tmp/model/model.tflite'
 TMP_LABELS_PATH = MICROSD_DIRECTORY + '/tmp/model/labels.txt'
 TMP_INFO_PATH = MICROSD_DIRECTORY + '/tmp/model/info.txt'
 TMP_INTERPRETER_LOG_PATH = MICROSD_DIRECTORY + '/tmp/interpreter.txt'
+TEMPLATES_DIRECTORY = '/templates'
 
 # Memory constants
 MAX_MODEL_RAM_USAGE = 3_500_000 # Size in bytes
 
-# Frontend constants
+# Web service constants
 IMAGES_ON_PAGE = 5
 
 # Model upload constants

@@ -111,6 +111,23 @@ class AppManager:
             
         return ResponseCode.OK
     
+    def remove_image(self, model, class_name, file_name):
+        dirs = uos.listdir(IMAGES_PATH)
+        if model not in dirs:
+            return ResponseCode.MODEL_NOT_FOUND
+        
+        class_dirs = uos.listdir(f'{IMAGES_PATH}/{model}')
+        if class_name not in class_dirs:
+            return ResponseCode.CLASS_NOT_FOUND
+        
+        file_list = uos.listdir(f'{IMAGES_PATH}/{model}/{class_name}')
+        if file_name not in file_list:
+            return ResponseCode.IMAGE_NOT_FOUND
+        
+        uos.remove(f'{IMAGES_PATH}/{model}/{class_name}/{file_name}')
+            
+        return ResponseCode.OK
+    
     def append_to_info_file_from_string_list(self, text_list):
         f = open(TMP_INFO_PATH, 'a')
         for text in text_list:
@@ -156,17 +173,28 @@ class AppManager:
         return uos.listdir(MODELS_PATH)
     
     def get_class_list(self, model):
-        return uos.listdir(f'{IMAGES_PATH}/{model}')
+        dirs = uos.listdir(IMAGES_PATH)
+        if model not in dirs:
+            return (ResponseCode.MODEL_NOT_FOUND, [])
+        return (ResponseCode.OK, uos.listdir(f'{IMAGES_PATH}/{model}'))
     
     def get_images_list(self, model, class_name):
-        return uos.listdir(f'{IMAGES_PATH}/{model}/{class_name}')
+        dirs = uos.listdir(IMAGES_PATH)
+        if model not in dirs:
+            return (ResponseCode.MODEL_NOT_FOUND, [])
+        
+        class_dirs = uos.listdir(f'{IMAGES_PATH}/{model}')
+        if class_name not in class_dirs:
+            return (ResponseCode.CLASS_NOT_FOUND, [])
+        
+        return (ResponseCode.OK, uos.listdir(f'{IMAGES_PATH}/{model}/{class_name}'))
     
     def get_image(self, model, class_name, file_name):
-        if model not in uos.listdir(MODELS_PATH):
+        if model not in uos.listdir(IMAGES_PATH):
             return (ResponseCode.MODEL_NOT_FOUND, "")
-        elif class_name not in uos.listdir(f'{MODELS_PATH}/{model}'):
+        elif class_name not in uos.listdir(f'{IMAGES_PATH}/{model}'):
             return (ResponseCode.CLASS_NOT_FOUND, "")
-        elif file_name not in uos.listdir(f'{MODELS_PATH}/{model}/{class_name}'):
+        elif file_name not in uos.listdir(f'{IMAGES_PATH}/{model}/{class_name}'):
             return (ResponseCode.IMAGE_NOT_FOUND, "")
         
         f = open(f'{IMAGES_PATH}/{model}/{class_name}/{file_name}', 'rb')

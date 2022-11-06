@@ -138,8 +138,8 @@ class ModelConfig:
         
         config['name'] = file_path.split('/')[-2]
         model_dir = file_path[0:file_path.rfind('/')]
-        config['path'] = model_dir + '/model.tflite'
-        config['labels_path'] = model_dir + '/labels.txt'
+        config['path'] = f'{model_dir}/model.tflite'
+        config['labels_path'] = f'{model_dir}/labels.txt'
         f = open(file_path, 'r')
         lines = f.readlines()
         config['image_width'] = int(lines[0])
@@ -181,6 +181,8 @@ class ModelManager:
         self.active_model_name = None
         
     def load_model(self, model_name):
+        if model_name not in uos.listdir(f'{MODELS_PATH}'):
+            return False
         model_config = ModelConfig(f'{MODELS_PATH}/{model_name}/info.txt')
         model = Model(model_config.size, model_config.input_size)
         model.read_model(model_config.path)
@@ -188,6 +190,8 @@ class ModelManager:
         model_executor.init_interpreter()
         
         self.reload_model(model_executor)
+        
+        return True
         
     def is_loaded(self):
         return self.active_model_name != None
