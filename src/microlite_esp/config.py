@@ -15,7 +15,7 @@ TEMPLATES_DIRECTORY = '/templates'
 MAX_MODEL_RAM_USAGE = 3_500_000 # Size in bytes
 
 # Web service constants
-IMAGES_ON_PAGE = 5
+IMAGES_ON_PAGE = 9
 
 # Model upload constants
 BUFFER_SIZE = 100_000

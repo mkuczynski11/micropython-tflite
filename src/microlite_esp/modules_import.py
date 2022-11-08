@@ -13,3 +13,4 @@ upip.install('micropython-enum')
 upip.install('picoweb')
 upip.install('micropython-ulogging') # TODO:REMOVE
 upip.install('ujson')
+upip.install('utemplate')

@@ -53,3 +53,4 @@ try:
 except Exception as e:
     print("Couldn't create template directory")
     print("Error ocurred: " + str(e))
+

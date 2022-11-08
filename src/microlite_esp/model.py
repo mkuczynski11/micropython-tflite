@@ -68,8 +68,11 @@ class ModelExecutor:
         :param image_path: path pointing to an image to predict on
         """
         self.model.read_jpg(image_path)
+        
         self.model.resize_input(self.config.width, self.config.height, 240, 240)
+        
         self.interpreter.invoke()
+        
         return self.predicted_class
         
     def init_interpreter(self):
@@ -99,10 +102,14 @@ class Model:
         
         :param file_path: file to be loaded
         """
-        size, self.input_buffer, _, _ = jpglib.decompress_jpg(file_path)
+        self.input_buffer = None
+        self.input_buffer, _, _ = jpglib.decompress_jpg(file_path)
         
     def resize_input(self, out_w, out_h, src_w, src_h):
         self.input_buffer = jpglib.resize_img(self.input_buffer, out_w, out_h, src_w, src_h)
+        f = open('resized.jpg', 'wb')
+        f.write(self.input_buffer)
+        f.close()
         
     def reset_input_buffer(self):
         """
@@ -183,6 +190,9 @@ class ModelManager:
     def load_model(self, model_name):
         if model_name not in uos.listdir(f'{MODELS_PATH}'):
             return False
+        
+        self.unload_model()
+        
         model_config = ModelConfig(f'{MODELS_PATH}/{model_name}/info.txt')
         model = Model(model_config.size, model_config.input_size)
         model.read_model(model_config.path)
@@ -208,6 +218,7 @@ class ModelManager:
         f.write(image)
         f.close()
         # Run prediction on the file
+        
         class_name = self.model_executor.predict(self.current_image_path)
         # Rename and move the file
         model_name = self.model_executor.config.name

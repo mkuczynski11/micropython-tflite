@@ -1,11 +1,8 @@
-f = open('sd/static/images/muschrooms/Suillus/Suillus1.jpg', 'w')
+import jpglib
 
-f.write("aaaa")
+buf, _, _ = jpglib.decompress_jpg('ja.jpg')
 
-f.close()
-
-f = open('sd/static/images/muschrooms/Boletus/Boletus.jpg', 'w')
-
-f.write("aaaa")
-
+buf = jpglib.resize_img(buf, 96, 96, 240, 240)
+f = open('resized.jpg', 'wb')
+f.write(buf)
 f.close()
