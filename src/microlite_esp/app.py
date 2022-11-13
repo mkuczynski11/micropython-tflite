@@ -126,52 +126,53 @@ async def show_images(res, model, class_name):
     for s in temp(file_list, "file", f'/image?model={model}&class={class_name}&file=', f'/images?model={model}', None, {'model':model, 'class':class_name}):
         yield from res.awrite(s)
 
-@app.route('/images_visible')
-def images_visible(req, res):
-    req.parse_qs()
-    model = req.form.get('model', 'false')
-    class_name = req.form.get('class', 'false')
-    page = req.form.get('page', 'false')
-    
-    if model == 'false':
-        yield from picoweb.start_response(res, status="400")
-        temp = template_loader.load("error.tpl")
-        for s in temp("model parameter was not provided.", "/images"):
-            yield from res.awrite(s)
-        return
-    elif class_name == 'false':
-        yield from picoweb.start_response(res, status="400")
-        temp = template_loader.load("error.tpl")
-        for s in temp("class parameter was not provided.", "/images"):
-            yield from res.awrite(s)
-        return
-    
-    if page == 'false':
-        page = 1
-    else:
-        page = int(page)
-    
-    app_manager = AppManager()
-    code, file_list = app_manager.get_images_list(model, class_name)
-    
-    if code != ResponseCode.OK:
-        yield from picoweb.start_response(res, status="400")
-        temp = template_loader.load("error.tpl")
-        for s in temp(f'{code}', "/images"):
-            yield from res.awrite(s)
-        return
-    
-    starting_index = (page - 1)*IMAGES_ON_PAGE
-    images_left = min(IMAGES_ON_PAGE, len(file_list) - (page - 1)*IMAGES_ON_PAGE)
-    files = file_list[starting_index:starting_index+images_left]
-    for i in range(len(files)):
-        files[i] = app_manager.get_image_path(model, class_name, files[i])
-    render_next_page = len(file_list) > starting_index+images_left
-    
-    yield from picoweb.start_response(res, status="200")
-    temp = template_loader.load("images.tpl")
-    for s in temp(files, f'/images?model={model}&class={class_name}', page, render_next_page, model, class_name):
-        yield from res.awrite(s)
+# TODO: Memory issues from picoweb
+# @app.route('/images_visible')
+# def images_visible(req, res):
+#     req.parse_qs()
+#     model = req.form.get('model', 'false')
+#     class_name = req.form.get('class', 'false')
+#     page = req.form.get('page', 'false')
+#     
+#     if model == 'false':
+#         yield from picoweb.start_response(res, status="400")
+#         temp = template_loader.load("error.tpl")
+#         for s in temp("model parameter was not provided.", "/images"):
+#             yield from res.awrite(s)
+#         return
+#     elif class_name == 'false':
+#         yield from picoweb.start_response(res, status="400")
+#         temp = template_loader.load("error.tpl")
+#         for s in temp("class parameter was not provided.", "/images"):
+#             yield from res.awrite(s)
+#         return
+#     
+#     if page == 'false':
+#         page = 1
+#     else:
+#         page = int(page)
+#     
+#     app_manager = AppManager()
+#     code, file_list = app_manager.get_images_list(model, class_name)
+#     
+#     if code != ResponseCode.OK:
+#         yield from picoweb.start_response(res, status="400")
+#         temp = template_loader.load("error.tpl")
+#         for s in temp(f'{code}', "/images"):
+#             yield from res.awrite(s)
+#         return
+#     
+#     starting_index = (page - 1)*IMAGES_ON_PAGE
+#     images_left = min(IMAGES_ON_PAGE, len(file_list) - (page - 1)*IMAGES_ON_PAGE)
+#     files = file_list[starting_index:starting_index+images_left]
+#     for i in range(len(files)):
+#         files[i] = app_manager.get_image_path(model, class_name, files[i])
+#     render_next_page = len(file_list) > starting_index+images_left
+#     
+#     yield from picoweb.start_response(res, status="200")
+#     temp = template_loader.load("images.tpl")
+#     for s in temp(files, f'/images?model={model}&class={class_name}', page, render_next_page, model, class_name):
+#         yield from res.awrite(s.encode())
 
 # NOTE: Running this required to change static folder in picoweb sources
 # TODO: Add option to download images
@@ -187,6 +188,96 @@ def images(req, res):
         yield from show_classes(res, model)
     else:
         yield from show_models_for_images(res)
+    
+# # TODO: Also memory issues
+# @app.route('/images_visible')
+# def test(req, res):
+#     req.parse_qs()
+#     model = req.form.get('model', 'false')
+#     class_name = req.form.get('class', 'false')
+#     page = req.form.get('page', 'false')
+#     
+#     if model == 'false':
+#         yield from picoweb.start_response(res, status="400")
+#         temp = template_loader.load("error.tpl")
+#         for s in temp("model parameter was not provided.", "/images"):
+#             yield from res.awrite(s)
+#         return
+#     elif class_name == 'false':
+#         yield from picoweb.start_response(res, status="400")
+#         temp = template_loader.load("error.tpl")
+#         for s in temp("class parameter was not provided.", "/images"):
+#             yield from res.awrite(s)
+#         return
+#     
+#     if page == 'false':
+#         page = 1
+#     else:
+#         page = int(page)
+#     
+#     app_manager = AppManager()
+#     code, file_list = app_manager.get_images_list(model, class_name)
+#     
+#     if code != ResponseCode.OK:
+#         yield from picoweb.start_response(res, status="400")
+#         temp = template_loader.load("error.tpl")
+#         for s in temp(f'{code}', "/images"):
+#             yield from res.awrite(s)
+#         return
+#     
+#     starting_index = (page - 1)*IMAGES_ON_PAGE
+#     images_left = min(IMAGES_ON_PAGE, len(file_list) - (page - 1)*IMAGES_ON_PAGE)
+#     files = file_list[starting_index:starting_index+images_left]
+#     for i in range(len(files)):
+#         files[i] = app_manager.get_image_path(model, class_name, files[i])
+#     render_next_page = len(file_list) > starting_index+images_left
+#     
+#     yield from picoweb.start_response(res)
+#     yield from res.awrite(b'<head><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"></head>')
+#     yield from res.awrite(b'<main class="container py-5"><div class="row">')
+#     for file in files:
+#         print(len(files))
+#         yield from res.awrite(b'<div class="col-sm-4">')
+#         
+#         yield from res.awrite(b'<div class="card mb-4 shadow-sm">')
+#         
+#         yield from res.awrite(b'<img class="card-img-top" src="')
+#         yield from res.awrite(file.encode())
+#         yield from res.awrite(b'">')
+#         yield from res.awrite(b'<div class="card-body">')
+#         yield from res.awrite(b'<p class="card-text">')
+#         yield from res.awrite(file.rsplit('/')[-1].encode())
+#         yield from res.awrite(b'</p>')
+#         
+#         yield from res.awrite(b'</div></div></div>')
+#     
+#     yield from res.awrite(b'</div>')
+#     
+#     if page != 1:
+#         yield from res.awrite(b'<button type="button" class="btn btn-outline-primary" onclick="location.href=')
+#         yield from res.awrite(b"'")
+#         yield from res.awrite(b'/images_visible?model=')
+#         yield from res.awrite(model.encode())
+#         yield from res.awrite(b'&class=')
+#         yield from res.awrite(class_name.encode())
+#         yield from res.awrite(b'&page=')
+#         yield from res.awrite(str(page-1).encode())
+#         yield from res.awrite(b"'")
+#         yield from res.awrite(b'">Previous page</button>')                                                        
+#         
+#     if render_next_page:
+#         yield from res.awrite(b'<button type="button" class="btn btn-outline-primary" onclick="location.href=')
+#         yield from res.awrite(b"'")
+#         yield from res.awrite(b'/images_visible?model=')
+#         yield from res.awrite(model.encode())
+#         yield from res.awrite(b'&class=')
+#         yield from res.awrite(class_name.encode())
+#         yield from res.awrite(b'&page=')
+#         yield from res.awrite(str(page+1).encode())
+#         yield from res.awrite(b"'")
+#         yield from res.awrite(b'">Next page</button>')
+#     
+#     yield from res.awrite(b'</main>')
     
 @app.route('/image')
 def image(req, res):
