@@ -35,7 +35,7 @@
                             <option value="{{model}}">{{model}}</option>
                             {% endfor %}
                         </div>
-                        <input class=" btn btn-primary mt-3" type='submit' />
+                        <input class=" btn btn-primary mt-3" type='submit' value='submit' />
                     </form>
                 </div>
             </div>

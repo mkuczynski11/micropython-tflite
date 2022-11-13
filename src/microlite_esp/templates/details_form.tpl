@@ -19,7 +19,7 @@
                         <label for='{{value[0]}}'>{{value[1]}}</label>
                         <input id='{{value[0]}}' type='{{value[2]}}' name='{{value[0]}}' class="form-control form-control-sm"/>
                         {% endfor %}
-                        <input class="btn btn-primary mt-3" type='submit' />
+                        <input class="btn btn-primary mt-3" type='submit' value='submit' />
                     </div>
                 </form>
             </div>

@@ -210,8 +210,12 @@ class AppManager:
     
     # TODO: validate in memorymanager
     def validate_required_memory(self, model_width, model_height):
+        print('validating required memory')
+        print(f'Max ram usage for model is {MAX_MODEL_RAM_USAGE}')
         arena_size_memory = MAX_MODEL_RAM_USAGE - (get_file_size(TMP_MODEL_PATH) + (int(model_width) * int(model_height) * 3))
         
+        print(f'Model size is {get_file_size(TMP_MODEL_PATH)}')
+        print(f'Memory for arena size left is {arena_size_memory}')
         model = bytearray(get_file_size(TMP_MODEL_PATH))
         file = open(TMP_MODEL_PATH, 'rb')
         file.readinto(model)

@@ -8,7 +8,8 @@ def render(accept_type, input_name, form_action, input_label):
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">
     <meta http-equiv=\"X-UA-Compatible\" content=\"ie=edge\">
     <title>Classification tool</title>
-    <link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css\" integrity=\"sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T\" crossorigin=\"anonymous\">
+    <link href=\"https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css\" rel=\"stylesheet\"/>
+    <link href=\"https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\" rel=\"stylesheet\"/>
 </head>
     <body>
         """
@@ -42,16 +43,17 @@ def render(accept_type, input_name, form_action, input_label):
                 <form action='"""
     yield str(form_action)
     yield """' enctype=\"multipart/form-data\" method='POST'>
-                    <div class=\"form-group\">
-                        <label for='file'>"""
+                    <div class=\"form-group row\">
+                        <label class=\"btn btn-primary col-sm-12\">
+                            <i class=\"fa fa-image\"></i>"""
     yield str(input_label)
-    yield """</label>
-                        <input id='file' type='file' accept='"""
+    yield """<input id='file' type='file' accept='"""
     yield str(accept_type)
     yield """' name='"""
     yield str(input_name)
-    yield """' class=\"form-control form-control-sm\"/>
-                        <input class=\"btn btn-primary mt-3\" type='submit' />
+    yield """' style=\"display: none;\"/>
+                        </label>
+                        <input class=\"btn btn-primary mt-3 col-sm-4\" type='submit' value='submit' />
                     </div>
                 </form>
             </div>

@@ -149,7 +149,7 @@ def images_visible(req, res):
     if page == 'false':
         page = 1
     else:
-        int(page)
+        page = int(page)
     
     app_manager = AppManager()
     code, file_list = app_manager.get_images_list(model, class_name)
@@ -166,10 +166,11 @@ def images_visible(req, res):
     files = file_list[starting_index:starting_index+images_left]
     for i in range(len(files)):
         files[i] = app_manager.get_image_path(model, class_name, files[i])
+    render_next_page = len(file_list) > starting_index+images_left
     
     yield from picoweb.start_response(res, status="200")
     temp = template_loader.load("images.tpl")
-    for s in temp(files):
+    for s in temp(files, f'/images?model={model}&class={class_name}', page, render_next_page, model, class_name):
         yield from res.awrite(s)
 
 # NOTE: Running this required to change static folder in picoweb sources
@@ -275,7 +276,7 @@ def finish_create_model(req, res):
         app_manager.reset_model_creation()
         yield from picoweb.start_response(res, status="405")
         temp = template_loader.load("error.tpl")
-        for s in temp("Model requires too much space to run and cannot be used on this device. Consider addint other models.", "/models"):
+        for s in temp("Model requires too much space to run and cannot be used on this device. Consider adding other models.", "/models"):
             yield from res.awrite(s)
         return
         
@@ -408,7 +409,6 @@ def create_model(req, res):
         temp = template_loader.load("error.tpl")
         for s in temp(f'{code}', "/models"):
             yield from res.awrite(s)
-        yield from app.render_template(res, "error.tpl", (f'{code}', "/models",))
         return
     
     app_manager.model_passed = True

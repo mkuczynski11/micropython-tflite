@@ -21,6 +21,9 @@
                 {% endif %}
                 </h1>
                 <a href="{{back_href}}"><h2>Go back</h2></a>
+                {% if param_dict != None and 'model' in param_dict.keys() and 'class' in param_dict.keys() %}
+                <a href="/images_visible?model={{param_dict['model']}}&class={{param_dict['class']}}">View image cards<h2></h2></a>
+                {% endif %}
             </div>
             {% include "list.tpl" item_list, "delete_images", param_name, item_href, counter_list, param_dict %}
         </main>

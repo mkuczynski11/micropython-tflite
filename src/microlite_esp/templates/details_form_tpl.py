@@ -57,7 +57,7 @@ def render(details_list, form_action):
         yield """' class=\"form-control form-control-sm\"/>
                         """
     yield """
-                        <input class=\"btn btn-primary mt-3\" type='submit' />
+                        <input class=\"btn btn-primary mt-3\" type='submit' value='submit' />
                     </div>
                 </form>
             </div>

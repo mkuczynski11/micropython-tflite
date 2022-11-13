@@ -72,7 +72,7 @@ def render(model_list, active_model):
                             """
     yield """
                         </div>
-                        <input class=\" btn btn-primary mt-3\" type='submit' />
+                        <input class=\" btn btn-primary mt-3\" type='submit' value='submit' />
                     </form>
                 </div>
             </div>
