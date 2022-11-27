@@ -1,15 +1,18 @@
 from utils import (
     dims_to_size,
     get_file_size,
-    singleton)
+    singleton,
+    ResponseCode)
 import microlite
 mode = 1
 import jpglib
 from config import (
     MODELS_PATH,
-    IMAGES_PATH,
-    TMP_IMAGE_PATH
-    )
+    TMP_IMAGE_PATH,
+    MODEL_INFO_FILE_NAME,
+    LABELS_FILE_NAME,
+    MODEL_FILE_NAME
+)
 import uos
 
 class ModelExecutor:
@@ -21,7 +24,8 @@ class ModelExecutor:
         if output_callback == None:
             self.output_callback = self.base_output_callback
         self.predicted_class = ""
-            
+        self.prediction_score = 0
+        
     def base_input_callback(self, microlite_interpreter):
         """
         Function to call while populating model's input tensors.
@@ -32,8 +36,6 @@ class ModelExecutor:
         
         for i in range (0, input_size):
             input_tensor.setValue(i, self.model.input_buffer[i])
-            
-        print ("setup %d bytes on the inputTensor." % (input_size))
     
     def base_output_callback(self, microlite_interpreter):
         """
@@ -44,12 +46,14 @@ class ModelExecutor:
         output_size = self.config.class_num
         
         best_index = 0
+        best_value = -1
         text = "Prediction=["
         
         for i in range(output_size):
             value = output_tensor.getValue(i)
-            if value > output_tensor.getValue(best_index):
+            if value > best_value:
                 best_index = i
+                best_value = value
                 
             text += self.config.labels[i]
             text += " "
@@ -57,26 +61,28 @@ class ModelExecutor:
             text += " "
         text += "]"
         
-        print(text)
-        
         self.predicted_class = self.config.labels[best_index]
+        self.prediction_score = best_value
   
-    def predict(self, image_path):
+    def predict(self):
         """
         Run prediction on image from the given path.
         
         :param image_path: path pointing to an image to predict on
         """
-        self.model.read_jpg(image_path)
+        self.model.read_jpg(TMP_IMAGE_PATH)
+        
         self.model.resize_input(self.config.width, self.config.height, 240, 240)
+        
         self.interpreter.invoke()
-        return self.predicted_class
+        
+        return (self.predicted_class, self.prediction_score)
         
     def init_interpreter(self):
         """
         Microlite interpreter initialization.
         """
-        self.interpreter = microlite.interpreter(self.model.model_buffer, self.config.arena_size, self.input_callback, self.output_callback) # Experimental arena size
+        self.interpreter = microlite.interpreter(self.model.model_buffer, self.config.arena_size, self.input_callback, self.output_callback)
         
 class Model:
     def __init__(self, model_size, input_size):
@@ -99,7 +105,8 @@ class Model:
         
         :param file_path: file to be loaded
         """
-        size, self.input_buffer, _, _ = jpglib.decompress_jpg(file_path)
+        self.input_buffer = None
+        self.input_buffer, _, _ = jpglib.decompress_jpg(file_path)
         
     def resize_input(self, out_w, out_h, src_w, src_h):
         self.input_buffer = jpglib.resize_img(self.input_buffer, out_w, out_h, src_w, src_h)
@@ -138,8 +145,8 @@ class ModelConfig:
         
         config['name'] = file_path.split('/')[-2]
         model_dir = file_path[0:file_path.rfind('/')]
-        config['path'] = model_dir + '/model.tflite'
-        config['labels_path'] = model_dir + '/labels.txt'
+        config['path'] = f'{model_dir}/{MODEL_FILE_NAME}'
+        config['labels_path'] = f'{model_dir}/{LABELS_FILE_NAME}'
         f = open(file_path, 'r')
         lines = f.readlines()
         config['image_width'] = int(lines[0])
@@ -163,9 +170,6 @@ class ModelConfig:
 class ModelManager:
     def __init__(self, model_executor=None):
         self.model_executor = model_executor
-        self.models_path = MODELS_PATH
-        self.images_path = IMAGES_PATH
-        self.current_image_path = TMP_IMAGE_PATH
         self.active_model_name = None
         
     def reload_model(self, model_executor):
@@ -181,7 +185,12 @@ class ModelManager:
         self.active_model_name = None
         
     def load_model(self, model_name):
-        model_config = ModelConfig(f'{MODELS_PATH}/{model_name}/info.txt')
+        if model_name not in uos.listdir(f'{MODELS_PATH}'):
+            return ResponseCode.MODEL_NOT_FOUND
+        
+        self.unload_model()
+        
+        model_config = ModelConfig(f'{MODELS_PATH}/{model_name}/{MODEL_INFO_FILE_NAME}')
         model = Model(model_config.size, model_config.input_size)
         model.read_model(model_config.path)
         model_executor = ModelExecutor(model, model_config)
@@ -189,30 +198,7 @@ class ModelManager:
         
         self.reload_model(model_executor)
         
+        return ResponseCode.OK
+        
     def is_loaded(self):
         return self.active_model_name != None
-        
-    # TODO:Remove when communication via ESP-NOW is done
-    def predict_scenario(self):
-        """
-        Reload model with other initialized executor
-        :param image_path: path pointing to an image to predict on
-        """
-        image = mock_file_exchange()
-        # Save jpg to file
-        f = open(self.current_image_path, 'wb')
-        f.write(image)
-        f.close()
-        # Run prediction on the file
-        class_name = self.model_executor.predict(self.current_image_path)
-        # Rename and move the file
-        model_name = self.model_executor.config.name
-        classified_count = len(uos.listdir(self.images_path + '/' + model_name + '/' + class_name))
-        uos.rename(self.current_image_path, self.images_path + '/' + model_name + '/' + class_name + '/' + class_name + str(classified_count + 1) + '.jpg')
-
-# TODO:Remove when communication via ESP-NOW is done
-def mock_file_exchange():
-    src = open('image.jpg', 'rb')
-    buf = src.read()
-    src.close()
-    return buf

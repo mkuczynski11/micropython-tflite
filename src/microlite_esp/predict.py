@@ -16,6 +16,9 @@ async def main_loop():
             app_manager = AppManager()
             ifconfig = app_manager.init_wifi_connection(ssid, password)
             print(f'Connection configuration:{ifconfig}')
+
+            sta_if = app_manager.get_network_inteface()
+            
         
         msg_count += 1
         await asyncio.sleep(1)

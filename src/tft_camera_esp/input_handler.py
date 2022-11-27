@@ -8,28 +8,27 @@ import utime
 from ap_service import CredentialsService
 import vga1_16x16 as font
 
-SSID = "iPhone"
-PASSWORD = "12345678"
+SSID = "GalaxyNote1005a8"
+PASSWORD = "zcyj6141"
 
-AP_SSID = "MP_AP"
+AP_SSID = "MicroPython_AccessPoint"
 AP_PASSWORD = "12345678"
 
 # Set pins to correct ones
-PREDICT_BUTTON = Pin(3, Pin.IN) # YELLOW  | predict
-MODEL_BUTTON = Pin(1, Pin.IN, Pin.PULL_UP) # MIDDLE RED | open model menu / choose 
+PREDICT_BUTTON = Pin(4, Pin.IN, Pin.PULL_UP) # YELLOW  | predict
+MODEL_BUTTON = Pin(0, Pin.IN, Pin.PULL_UP) # MIDDLE RED | open model menu / choose 
+AP_BUTTON = Pin(16, Pin.IN, Pin.PULL_UP) # LAST RED openAP / scroll down
 
-mosi = 13 # zielony -> 13 (DIN)
-sck = 14 # pomaranczowy -> 14 (CLK)
-cs = 15 # zolty -> 15 (CS)
-dc = 12 # niebieski -> 12 (DC)
-rst = 2 # brazowy -> 2 (RST)
+mosi = 13
+sck = 14
+cs = 15
+dc = 2
+rst = 12
 baud = 31250000
 
 MARKER_SIZE = (16, 16)
 PER_PAGE = 12 # There can be only 15 positions in the list to display
 GO_BACK_PROMPT = '> Go back'
-
-APP_EXECUTION_LIMIT = 600 # seconds
 
 
 def config(rotation=0, buffer_size=0, options=0):
@@ -44,7 +43,7 @@ def config(rotation=0, buffer_size=0, options=0):
         options=options,
         buffer_size=buffer_size)
 
-def change_active_model(tft, espnow_manager):
+def change_active_model(tft):
     """
     This method assumes that user have pressed button to enter model menu
     """
@@ -56,18 +55,18 @@ def change_active_model(tft, espnow_manager):
         tft.text(font, f'Page: {page_number}', 16, 16 * 14)
 
     tft.fill(st7789.BLACK)
-            
-    espnow_manager.send_message("GET_MODELS")
-    available_models, active_model = espnow_manager.receive_models()
+        
+    #models = [GO_BACK_PROMPT, '1garbage', '1vehicles', '1shrooms', '1garbage', '1vehicles', '1shrooms', '1garbage', '1vehicles', '1shrooms', '1garbage', '1vehicles', '1shrooms', '1garbage', '2vehicles', '2vehicles','2vehicles', '2vehicles']
     
-    if available_models[0] == 'None' or not available_models:
+    models, active_model = espnow_manager.receive_models()
+    
+    if models[0] == 'None' or not models:
         models = [GO_BACK_PROMPT]
     else:
-        models = [GO_BACK_PROMPT]
-        for model in available_models:
-            models.append(model)
+        models = [GO_BACK_PROMPT, *models]
     
     display_list = models[:PER_PAGE]
+    active_model = models[0]
     step_y = 16
     
     current_page = 1
@@ -102,7 +101,7 @@ def change_active_model(tft, espnow_manager):
             time.sleep(0.2)
 
         # Scroll w dol
-        if not PREDICT_BUTTON.value():
+        if not AP_BUTTON.value():
             tft.fill(st7789.BLACK)
             cursor_y += 1
                 
@@ -124,6 +123,17 @@ def change_active_model(tft, espnow_manager):
     
             tft.fill_rect(0, cursor_y * 16, *MARKER_SIZE, st7789.WHITE)
             time.sleep(0.2)
+            
+def show_prediction_results(tft, results):
+    tft.fill(st7789.BLACK)
+    
+    if results[0] == "PREDICTION_FAIL":
+        tft.text(font, "Prediction failed", 20, 16)
+        tft.text(font, f"Error = {results[1]}", 20, 32)
+    else:
+        tft.text(font, "Prediction results", 20, 16)
+        tft.text(font, f"Class = {results[0]}", 20, 32)
+        tft.text(font, f"Accuracy = {results[1]}", 20, 48)
 
 
 def connect_wifi(espnow_manager, ssid, password, sta, ap):
@@ -254,7 +264,7 @@ def main():
 # #         
 # #         tft.jpg_from_buffer(buf, 0, 0)
 
-    print('Main function started')
+    # Camera & display code
     
     # Network init =======================================
     sta = network.WLAN(network.STA_IF); sta.active(False)
@@ -273,8 +283,7 @@ def main():
     # Screen init =========================================
     tft = config(0)
     tft.init()
-    tft.fill(st7789.RED)
-    tft.text(font, "Main started", 20, 16)
+    tft.fill(st7789.BLACK)
     
     # End screen init =====================================
     
@@ -292,98 +301,48 @@ def main():
     
     # End ESP NOW init ====================================
     start = utime.time()
-    service_active = False
-    service_ip = None
-    print('Main loop started')    
+        
     while True:
-        time_passed = time.time() - start
-        if time_passed >= APP_EXECUTION_LIMIT:
-            tft.fill(st7789.BLUE)
-            tft.text(font, "App finished", 10, 48)
-            break
-
-        tft.fill(st7789.RED)
-        tft.text(font, "Click button", 10, 32)
-        tft.text(font, "Time left (s):", 10, 48)
-        tft.text(font, f"{APP_EXECUTION_LIMIT - time_passed}", 10, 64)
-        time.sleep(0.2)
-        if service_ip and service_active:
-            tft.text(font, "Service IP:", 10, 80)
-            tft.text(font, f"{service_ip}", 10, 96)
-
-        
-        if not PREDICT_BUTTON.value() and not MODEL_BUTTON.value():
-            print('Access point active')
-            tft.fill(st7789.BLACK)
-            tft.text(font, "AP active", 10, 16)
-            tft.text(font, "AP service:", 10, 32)
-            tft.text(font, f"{AP_SSID}", 10, 48)
-            tft.text(font, "192.168.4.1", 10, 48)
-            ssid, password = get_wifi_credentials(ap)
-            
-            if not ssid or not password:
-                tft.fill(st7789.BLACK)
-                tft.text(font, "Failed to get", 10, 16)
-                tft.text(font, "WiFi credentials", 10, 32)
-                time.sleep(2)
-                continue
-
-            message, ip = connect_wifi(espnow_manager, ssid, password, sta, ap)
-            print(f'Response from connect_wifi = {message}')
-            tft.fill(st7789.BLACK)
-            tft.text(font, f"{message}", 10, 16)
-            if ip:
-                tft.text(font, f"{ip}", 10, 32)
-                service_active = True
-            service_ip = ip
-        
-            time.sleep(7)
-
+        if time.time() - start >= 30:
+            return
 
         if not PREDICT_BUTTON.value():
             print('Prediction')
-            tft.fill(st7789.BLACK)
-            tft.text(font, "Prediction running", 20, 16)
-
             buf = camera.capture()
             
             with open('prediction.jpg', 'wb') as f:
                 f.write(buf)
                 
+                
             tft.jpg('prediction.jpg', 0, 0, st7789.SLOW)
                 
             results = predict(espnow_manager, camera, 'prediction.jpg')
 
-            tft.fill(st7789.BLACK)
-    
-            if results[0] == "PREDICTION_FAIL":
-                tft.text(font, "Predict failed", 10, 16)
-                tft.text(font, "Error:", 10, 32)
-                tft.text(font, f"{results[1]}:", 10, 48)
-            else:
-                tft.text(font, "Class:", 10, 16)
-                tft.text(font, f"{results[0]}", 10, 32)
-                tft.text(font, "Accuracy:", 10, 48)
-                tft.text(font, f"{results[1]}", 10, 64)
-                
-            time.sleep(4)
+            show_prediction_results(tft, results)
+            
+            print(message)
+            
+            time.sleep(0.5)
             
         if not MODEL_BUTTON.value():
             print('Model menu')
-            tft.fill(st7789.BLACK)
-            tft.text(font, "Model menu", 20, 16)
-            time.sleep(2)
-            
-            model = change_active_model(tft, espnow_manager)
+            model = change_active_model(tft)
             
             if model != 'None':
                 message = change_model(espnow_manager, model)
             else:
-                continue
+                pass
 
+            time.sleep(0.5)
+
+        if not AP_BUTTON.value():
+            print('Access point active')
+            
+            ssid, password = get_wifi_credentials(ap)
+            
+            message = connect_wifi(espnow_manager, ssid, password, sta, ap)
+            print(f'Response from connect_wifi = {message}')
             time.sleep(0.5)
         
         
     camera.deinit()
-
-main()
