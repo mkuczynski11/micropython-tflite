@@ -267,7 +267,7 @@ class WebApp:
     def render_template(self, writer, tmpl_name, args=()):
         tmpl = self._load_template(tmpl_name)
         for s in tmpl(*args):
-            yield from writer.awritestr(s)
+            yield from writer.awrite(s)
 
     def render_str(self, tmpl_name, args=()):
         #TODO: bloat
