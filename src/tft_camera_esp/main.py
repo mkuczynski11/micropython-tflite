@@ -219,6 +219,7 @@ def reset_wifi():
 
 def main():   
     print('Main function started')
+    time.sleep(5)
     
     # Network init =======================================
     sta, ap = reset_wifi()
