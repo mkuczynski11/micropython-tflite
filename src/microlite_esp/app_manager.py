@@ -16,7 +16,7 @@ class AppManager:
         self.password = ""
         self.model_passed = False
         self.labels_passed = False
-        self.sta_if, self.ap_if = self.wifi_reset()
+        self.wifi_reset()
         self.peer_mac = PEER_MAC_ADDRESS
         print(f'Active channel is {self.sta_if.config("channel")}')
         
@@ -24,13 +24,15 @@ class AppManager:
       sta = network.WLAN(network.STA_IF); sta.active(False)
       ap = network.WLAN(network.AP_IF); ap.active(False)
       sta.active(True)
+      ap.active(True)
       while not sta.active():
           time.sleep(0.1)
       sta.disconnect()
       while sta.isconnected():
           time.sleep(0.1)
       sta.config(channel=1, reconnects=0)
-      return sta, ap
+      self.sta_if = sta
+      self.ap_if = ap
 
     def init_wifi_connection(self, ssid, password):
         self.ssid = ssid
@@ -52,7 +54,8 @@ class AppManager:
             print(f'Active channel is {self.sta_if.config("channel")}')
             config = self.sta_if.ifconfig()
             return config
-        else: 
+        else:
+            self.wifi_reset() # AAAAA
             return ()
         
     def get_network_interface(self):
@@ -222,16 +225,18 @@ class AppManager:
         return model_size < MAX_MODEL_RAM_USAGE
     
     def move_image(self, model_name, class_name):
-        classified_count = len(uos.listdir(f'{IMAGES_PATH}/{model_name}/{class_name}'))
-        uos.rename(TMP_IMAGE_PATH, f'{IMAGES_PATH}/{model_name}/{class_name}/{class_name}{classified_count + 1}.jpg')
+        image_list = uos.listdir(f'{IMAGES_PATH}/{model_name}/{class_name}')
+        number = 1
+        for image in image_list:
+            image_number = image.split(f'{class_name}')[-1].replace('.jpg', '')
+            if int(image_number) >= number:
+                number = int(image_number) + 1
+            
+        uos.rename(TMP_IMAGE_PATH, f'{IMAGES_PATH}/{model_name}/{class_name}/{class_name}{number}.jpg')
     
     def validate_required_memory(self, model_width, model_height):
-        print('validating required memory')
-        print(f'Max ram usage for model is {MAX_MODEL_RAM_USAGE}')
         arena_size_memory = MAX_MODEL_RAM_USAGE - (get_file_size(TMP_MODEL_PATH) + (int(model_width) * int(model_height) * 3))
         
-        print(f'Model size is {get_file_size(TMP_MODEL_PATH)}')
-        print(f'Memory for arena size left is {arena_size_memory}')
         model = bytearray(get_file_size(TMP_MODEL_PATH))
         file = open(TMP_MODEL_PATH, 'rb')
         file.readinto(model)

@@ -1,6 +1,5 @@
 from utils import singleton, get_file_size, get_free_space
 import espnow
-import aioespnow
 import time
 from config import MICROSD_DIRECTORY, TMP_IMAGE_PATH
  
@@ -27,14 +26,12 @@ class ESPNowCommunicationManager:
  
     MAX_CHUNK_SIZE = 250
  
-    def __init__(self, peer_mac, sta_if, is_async=False):
+    def __init__(self, peer_mac, sta_if):
         self._peer_mac = peer_mac
         self._sta_if = sta_if
        
-        if is_async:
-            self._espnow = aioespnow.AIOESPNow()
-        else:
-            self._espnow = espnow.ESPNow()
+
+        self._espnow = espnow.ESPNow()
         self._espnow.active(True)
         self._espnow.add_peer(self._peer_mac)
  
@@ -75,23 +72,27 @@ class ESPNowCommunicationManager:
        
         return message_type
  
-    def send_prediction_request(self, file_path):
+    def send_prediction_request(self, file_path, sta, ap):
+
         file_size = get_file_size(file_path)
-        print(file_size)
  
-        success = self._espnow.send(self._peer_mac, ESPNowMessages.REQ["PREDICT"])
-        if not self._sta_if.isconnected():
-            self._sta_if.active(True)
-            
-            while not self._sta_if.active():
+        self._espnow.send(self._peer_mac, ESPNowMessages.REQ["PREDICT"])
+
+        if not sta.isconnected():
+            sta.active(False)
+            ap.active(False)
+            sta.active(True)
+            ap.active(True)
+            sta.config(channel=1, reconnects=0)
+            while not sta.active():
                 time.sleep(0.1)
-            self._sta_if.config(channel=1)
-
-
-        success = success and self._espnow.send(self._peer_mac, f'{file_size}')
- 
+            sta.disconnect()
+            while sta.isconnected():
+                time.sleep(0.1)
+    
+        self._espnow.send(self._peer_mac, f'{file_size}')
+        
         current_chunk = 0
-        i = 0
         with open(file_path, "rb") as f:
             while True:
                 chunk = f.read(self.MAX_CHUNK_SIZE)
@@ -100,9 +101,8 @@ class ESPNowCommunicationManager:
                 if not chunk:
                     break
  
-                time.sleep(0.3)
+                time.sleep(0.2)
                 self._espnow.send(self._peer_mac, chunk, False)
- 
        
     def receive_models(self):
         """
@@ -122,68 +122,3 @@ class ESPNowCommunicationManager:
        
         prediction_str = prediction.decode('utf-8')
         return prediction_str
-   
-    async def areceive_message(self):
-        _, msg = await self._espnow.arecv()
- 
-        message_type = None
-        for key, value in ESPNowMessages.REQ.items():
-            if msg == value:
-                message_type = key
-                break
-       
-        return message_type
-   
-    async def asend_message(self, message_type):
-        print(f'Sending {message_type}')
-        message = ESPNowMessages.RESP[message_type]
-        print(f'Translated to {message}')
-        received = await self._espnow.asend(self._peer_mac, message)
- 
-        return received
- 
-    async def asend_text(self, text):
-        received = await self._espnow.asend(self._peer_mac, text)
- 
-        return received
-   
-    async def arecieve_model(self):
-        _, model = await self._espnow.arecv()
-       
-        model_str = model.decode('utf-8')
-        return model_str
-   
-    async def arecieve_wifi_details(self):
-        _, wifi_details = await self._espnow.arecv()
-       
-        wifi_details = wifi_details.decode('utf-8').split('&')
-        return (wifi_details[0], wifi_details[1])
- 
-    async def areceive_file(self):
- 
-        _, file_size_bytes = await self._espnow.arecv()
-        file_size = int(file_size_bytes.decode('utf-8'))
-        print(f'File with size {file_size} incoming!')
-       
-        if file_size > get_free_space(MICROSD_DIRECTORY):
-            return False
- 
-        chunks_amount = 0
- 
-        if file_size % self.MAX_CHUNK_SIZE == 0:
-            chunks_amount = int(file_size) // int(self.MAX_CHUNK_SIZE)
-        else:
-            chunks_amount = int(file_size) // int(self.MAX_CHUNK_SIZE) + 1
- 
-        with open(TMP_IMAGE_PATH, "wb") as f:
-            print(f'chunks {chunks_amount}')
-            for i in range(chunks_amount):
-                _, chunk = await self._espnow.arecv()
-                print(f'{i}:{chunk}')
-                file_size -= self.MAX_CHUNK_SIZE
- 
-                f.write(chunk)
- 
-        print('File received!')
-        return True
-   

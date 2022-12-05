@@ -7,9 +7,7 @@ import time
 import utime
 from ap_service import CredentialsService
 import vga1_16x16 as font
-
-SSID = "iPhone"
-PASSWORD = "12345678"
+import uos
 
 AP_SSID = "MP_AP"
 AP_PASSWORD = "12345678"
@@ -25,11 +23,10 @@ dc = 12 # niebieski -> 12 (DC)
 rst = 2 # brazowy -> 2 (RST)
 baud = 31250000
 
+
 MARKER_SIZE = (16, 16)
 PER_PAGE = 12 # There can be only 15 positions in the list to display
 GO_BACK_PROMPT = '> Go back'
-
-APP_EXECUTION_LIMIT = 600 # seconds
 
 
 def config(rotation=0, buffer_size=0, options=0):
@@ -44,7 +41,7 @@ def config(rotation=0, buffer_size=0, options=0):
         options=options,
         buffer_size=buffer_size)
 
-def change_active_model(tft, espnow_manager):
+def change_active_model(tft, espnow_manager, sta, ap):
     """
     This method assumes that user have pressed button to enter model menu
     """
@@ -58,6 +55,8 @@ def change_active_model(tft, espnow_manager):
     tft.fill(st7789.BLACK)
             
     espnow_manager.send_message("GET_MODELS")
+    if not sta.isconnected(): 
+        sta, ap = reset_wifi()
     available_models, active_model = espnow_manager.receive_models()
     
     if available_models[0] == 'None' or not available_models:
@@ -96,7 +95,7 @@ def change_active_model(tft, espnow_manager):
         if not MODEL_BUTTON.value():
             if cursor_y == 0:
                 print('Exited model menu')
-                return 'None'
+                return GO_BACK_PROMPT
             print(f"Selected model {models[cursor_y]}")
             return models[cursor_y + (current_page - 1) * PER_PAGE]
             time.sleep(0.2)
@@ -128,6 +127,8 @@ def change_active_model(tft, espnow_manager):
 
 def connect_wifi(espnow_manager, ssid, password, sta, ap):
     espnow_manager.send_message("WIFI_CONNECT")
+    if not sta.isconnected():
+        sta, ap = reset_wifi()
     espnow_manager.send_wifi_credentials(ssid, password)
 
     start = utime.time()
@@ -135,29 +136,32 @@ def connect_wifi(espnow_manager, ssid, password, sta, ap):
         
     if not sta.isconnected():
         sta.active(True)
-        sta.connect(SSID, PASSWORD)
+        sta.connect(ssid, password)
         while not sta.isconnected() and not timed_out:
             if utime.time() - start >= 20:
                 timed_out = True
             else:
                 pass
-        
+
     if sta.isconnected():
         ap.active(True)
         print(f'Active channel is {sta.config("channel")}')
-        config = sta.ifconfig()
+    else:
+        pass
     
     message = espnow_manager.receive_message()
     ip = None
-    
+
     if message == "WIFI_CONNECT_SUCCESS":
         ip = espnow_manager.receive_text()
     
     return (message, ip)
 
     
-def change_model(espnow_manager, model_name):
+def change_model(espnow_manager, model_name, sta, ap):
     espnow_manager.send_message("CHANGE_MODEL")
+    if not sta.isconnected():
+        sta, ap = reset_wifi()
     espnow_manager.send_model_name(model_name)
     
     message = espnow_manager.receive_message()
@@ -167,10 +171,8 @@ def change_model(espnow_manager, model_name):
     
     return message
     
-def predict(espnow_manager, camera, file_name):
-    buf = camera.capture()
-        
-    espnow_manager.send_prediction_request(file_name)
+def predict(espnow_manager, camera, file_name, sta, ap):        
+    espnow_manager.send_prediction_request(file_name, sta, ap)
 
     message = espnow_manager.receive_message()
     error_message = None
@@ -189,78 +191,23 @@ def predict(espnow_manager, camera, file_name):
         return (predicted_class, prediction_result)
 
 
-def get_wifi_credentials(ap_if):
-    service = CredentialsService(AP_SSID, AP_PASSWORD, ap_if)
+def get_wifi_credentials(sta, ap):
+    ap.active(False)
+    ap.active(True)
+    service = CredentialsService(AP_SSID, AP_PASSWORD, ap)
     
     service.start_ap()
     ssid, password = service.wait_for_credentials()
     print(f'Received ssid = {ssid}, password = {password}')
-    
+    if not sta.isconnected():
+        sta, ap = reset_wifi()
     return (ssid, password)
 
-
-def main():
-#     camera.init(0, format=camera.JPEG, fb_location=camera.PSRAM)
-#     camera.framesize(camera.FRAME_240X240)
-#     
-#     buf = camera.capture()
-#     
-#     with open('img.jpg', 'wb') as f:
-#         f.write(buf)
-
-#     
-# #     get_wifi_credentials(ap)
-# 
-#     peer = b'\xec\x62\x60\x9d\x03\xec'
-#     
-#     espnow_manager = ESPNowCommunicationManager(peer, sta)
-#     
-#     print('Sent request to connect to wifi')
-#     message = connect_wifi(espnow_manager, SSID, PASSWORD, sta, ap)
-#     print(f'Response from connect_wifi = {message}')
-#  
-#     
-#     print('Sent request to get models')
-#     espnow_manager.send_message("GET_MODELS")
-#     models = espnow_manager.receive_models()
-#     print(models)
-# #           
-#     print('Sent request to change model')
-#     message = change_model(espnow_manager, 'garbage')
-#     print(message)
-#     
-# #   print('Sent request to predict')
-#     
-#     message = predict(espnow_manager, camera, 'img.jpg')
-#     print(message)
-#     time.sleep(10)
-#     peeee = espnow_manager._espnow.get_peer(peer)
-#     print(peeee)
-#     
-#     message = predict(espnow_manager, camera, 'img.jpg')
-#     print(message)
-#     message = predict(espnow_manager, camera, 'img.jpg')
-#     print(message)
-
-    
-#     print('Sent request to connect to wifi')
-#     message = connect_wifi(espnow_manager, SSID, PASSWORD, sta)
-#     print(f'Response from connect_wifi = {message}')
-# 
-# #     print('Sent request to predict')
-# #     message = predict(espnow_manager, camera, 'img.jpg')
-# #     print(message)
-# #     
-# #         
-# #         tft.jpg_from_buffer(buf, 0, 0)
-
-    print('Main function started')
-    
-    # Network init =======================================
+def reset_wifi():
     sta = network.WLAN(network.STA_IF); sta.active(False)
     ap = network.WLAN(network.AP_IF); ap.active(False)
-    ap.active(True)
     sta.active(True)
+    ap.active(True)
     sta.config(channel=1, reconnects=0)
     while not sta.active():
         time.sleep(0.1)
@@ -268,13 +215,19 @@ def main():
     while sta.isconnected():
         time.sleep(0.1)
         
+    return sta, ap
+
+def main():   
+    print('Main function started')
+    
+    # Network init =======================================
+    sta, ap = reset_wifi()
+        
     # End network init ====================================
     
     # Screen init =========================================
     tft = config(0)
     tft.init()
-    tft.fill(st7789.RED)
-    tft.text(font, "Main started", 20, 16)
     
     # End screen init =====================================
     
@@ -287,102 +240,142 @@ def main():
     
     # ESP NOW init ========================================
     peer = b'\xec\x62\x60\x9d\x03\xec'
-    
     espnow_manager = ESPNowCommunicationManager(peer, sta)
     
     # End ESP NOW init ====================================
     start = utime.time()
     service_active = False
     service_ip = None
-    print('Main loop started')    
+    ap_invoked = False
+    print('Main loop started')
+    refresh_view = True
     while True:
-        time_passed = time.time() - start
-        if time_passed >= APP_EXECUTION_LIMIT:
-            tft.fill(st7789.BLUE)
-            tft.text(font, "App finished", 10, 48)
-            break
-
-        tft.fill(st7789.RED)
-        tft.text(font, "Click button", 10, 32)
-        tft.text(font, "Time left (s):", 10, 48)
-        tft.text(font, f"{APP_EXECUTION_LIMIT - time_passed}", 10, 64)
+        
         time.sleep(0.2)
-        if service_ip and service_active:
-            tft.text(font, "Service IP:", 10, 80)
-            tft.text(font, f"{service_ip}", 10, 96)
 
+        if refresh_view:
+            tft.fill(st7789.BLACK)
+            tft.text(font, "RED button:", 10, 16)
+            tft.text(font, "> Prediction:", 10, 32)
+            tft.text(font, "YELLOW button:", 10, 48)
+            tft.text(font, "> Change model", 10, 64)
+            tft.text(font, "BOTH pressed:", 10, 80)
+            tft.text(font, "> AP Service", 10, 96)
+            
+            refresh_view = False
+    
+            if service_ip and service_active:
+                tft.text(font, "Service IP:", 10, 112)
+                tft.text(font, f"{service_ip}", 10, 128)
         
         if not PREDICT_BUTTON.value() and not MODEL_BUTTON.value():
             print('Access point active')
-            tft.fill(st7789.BLACK)
-            tft.text(font, "AP active", 10, 16)
-            tft.text(font, "AP service:", 10, 32)
-            tft.text(font, f"{AP_SSID}", 10, 48)
-            tft.text(font, "192.168.4.1", 10, 48)
-            ssid, password = get_wifi_credentials(ap)
-            
-            if not ssid or not password:
+            if not ap_invoked:
                 tft.fill(st7789.BLACK)
-                tft.text(font, "Failed to get", 10, 16)
-                tft.text(font, "WiFi credentials", 10, 32)
-                time.sleep(2)
-                continue
+                tft.text(font, "AP active", 10, 16)
+                tft.text(font, "AP service:", 10, 32)
+                tft.text(font, f"{AP_SSID}", 10, 48)
+                tft.text(font, "192.168.4.1", 10, 64)
+                ssid, password = get_wifi_credentials(sta, ap)
+                
+                if not ssid or not password:
+                    tft.fill(st7789.BLACK)
+                    tft.text(font, "Failed to get", 10, 16)
+                    tft.text(font, "WiFi login", 10, 32)
+                    time.sleep(2)
+                    continue
 
-            message, ip = connect_wifi(espnow_manager, ssid, password, sta, ap)
-            print(f'Response from connect_wifi = {message}')
-            tft.fill(st7789.BLACK)
-            tft.text(font, f"{message}", 10, 16)
-            if ip:
-                tft.text(font, f"{ip}", 10, 32)
-                service_active = True
-            service_ip = ip
+                message, ip = connect_wifi(espnow_manager, ssid, password, sta, ap)
+                print(f'Response from connect_wifi = {message}')
+                
+                if message == "WIFI_CONNECT_SUCCESS":
+                    tft.fill(st7789.BLACK)
+                    tft.text(font, f"Connected", 10, 16)
+                    tft.text(font, f"to WiFi", 10, 32)
+                elif message == "WIFI_CONNECT_FAIL":
+                    tft.fill(st7789.BLACK)
+                    tft.text(font, "Failed to", 10, 16)
+                    tft.text(font, "connect to WIFI", 10, 32)
+                else:
+                    tft.fill(st7789.BLACK)
+                    tft.text(font, "Error!", 10, 16)
+                    tft.text(font, "Consider reset", 10, 32)
+                    
+                if ip:
+                    tft.text(font, f"{ip}", 10, 48)
+                    service_active = True
+                service_ip = ip
+                ap_invoked = True
+                
+            else:
+                tft.fill(st7789.BLACK)
+                tft.text(font, "AP can be only", 10, 16)
+                tft.text(font, "started once", 10, 32)
+            
+            refresh_view = True
         
-            time.sleep(7)
+            time.sleep(4)
 
 
         if not PREDICT_BUTTON.value():
             print('Prediction')
             tft.fill(st7789.BLACK)
-            tft.text(font, "Prediction running", 20, 16)
 
             buf = camera.capture()
+            buf = camera.capture()
+
+            f = open('prediction.jpg', 'wb')
+            f.write(buf)
+            f.close()
+            tft.jpg('prediction.jpg', 0, 0, st7789.FAST)
+
+            tft.text(font, "Predicting", 10, 32)
+                
+            results = predict(espnow_manager, camera, 'prediction.jpg', sta, ap)
             
-            with open('prediction.jpg', 'wb') as f:
-                f.write(buf)
-                
-            tft.jpg('prediction.jpg', 0, 0, st7789.SLOW)
-                
-            results = predict(espnow_manager, camera, 'prediction.jpg')
+            uos.remove('prediction.jpg')
 
             tft.fill(st7789.BLACK)
     
             if results[0] == "PREDICTION_FAIL":
-                tft.text(font, "Predict failed", 10, 16)
-                tft.text(font, "Error:", 10, 32)
-                tft.text(font, f"{results[1]}:", 10, 48)
+                tft.text(font, "Predict failed", 0, 16)
+                tft.text(font, "Error:", 0, 32)
+                tft.text(font, f"{results[1]}:", 0, 48)
             else:
                 tft.text(font, "Class:", 10, 16)
                 tft.text(font, f"{results[0]}", 10, 32)
                 tft.text(font, "Accuracy:", 10, 48)
                 tft.text(font, f"{results[1]}", 10, 64)
                 
-            time.sleep(4)
+            refresh_view = True
+            time.sleep(10)
             
         if not MODEL_BUTTON.value():
             print('Model menu')
-            tft.fill(st7789.BLACK)
-            tft.text(font, "Model menu", 20, 16)
-            time.sleep(2)
             
-            model = change_active_model(tft, espnow_manager)
-            
-            if model != 'None':
-                message = change_model(espnow_manager, model)
-            else:
-                continue
-
-            time.sleep(0.5)
-        
+            # Handle cursor scrolling one position under list
+            model = change_active_model(tft, espnow_manager, sta, ap)
+                
+            if model == GO_BACK_PROMPT:
+                tft.fill(st7789.BLACK)
+                tft.text(font, "Exited from", 20, 16)
+                tft.text(font, "model menu", 20, 32)
+                
+            elif model != 'None':
+                message = change_model(espnow_manager, model, sta, ap)
+                
+                if message == "CHANGE_MODEL_SUCCESS":
+                    tft.fill(st7789.BLACK)
+                    tft.text(font, "Model changed", 20, 16)
+                    tft.text(font, "Active model:", 20, 32)
+                    tft.text(font, f"{model}", 20, 48)
+                else:
+                    tft.fill(st7789.BLACK)
+                    tft.text(font, "Failed to", 20, 16)
+                    tft.text(font, "change model", 20, 32)
+                
+            refresh_view = True
+            time.sleep(5)        
         
     camera.deinit()
 

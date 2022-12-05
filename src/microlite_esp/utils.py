@@ -3,11 +3,11 @@ import uos
 import gc
 
 class ResponseCode:
-    OK = "OK"
-    NOT_ENOUGH_MEMORY = "SD card has reached its maximum memory"
-    MODEL_NOT_FOUND = "model was not found"
-    CLASS_NOT_FOUND = "class was not found"
-    IMAGE_NOT_FOUND = "image was not found"
+    OK = "ok"
+    NOT_ENOUGH_MEMORY = "max memory"
+    MODEL_NOT_FOUND = "model not found"
+    CLASS_NOT_FOUND = "class not found"
+    IMAGE_NOT_FOUND = "image not found"
 
 def singleton(class_):
     instances = {}

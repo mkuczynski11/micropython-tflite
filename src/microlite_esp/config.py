@@ -28,4 +28,4 @@ TEXT_SPLITTER = b'text/plain\r\n\r\n'
 BYTE_CONTENT_END_SPLITTER = b'\r\n------'
 
 # Device constants
-PEER_MAC_ADDRESS = b'\xec\x62\x60\x9c\xfe\x4c'
+PEER_MAC_ADDRESS = b'\x0c\xb8\x15\xf4\xc6\xdc'

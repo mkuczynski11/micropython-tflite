@@ -3,10 +3,7 @@ try:
   import usocket as socket
 except:
   import socket
-import utime
-
-TIMEOUT_LIMIT = 120 # seconds
-  
+    
 class CredentialsService:
     def __init__(self, ssid, password, ap_if):
         self.ssid = ssid
@@ -31,12 +28,7 @@ class CredentialsService:
         soc.bind(('',port))
         soc.listen(5)
         print("Listening on 192.168.4.1")
-        start = utime.time()
         while True:
-                
-            if utime.time() - start > TIMEOUT_LIMIT:
-                print('Timeout')
-                return None, None
             
             client, addr = soc.accept()
             print("Client connected from", addr)
@@ -52,6 +44,8 @@ class CredentialsService:
                 print("The SSID is", ssid, "and the Password is", password)
                 client.send('HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n')
                 client.send(self._get_success())
+                client.close()
+                
                 return ssid, password
             print(request)
 
@@ -108,5 +102,6 @@ class CredentialsService:
         
     def get_credentials(self):
         pass
+
 
 
