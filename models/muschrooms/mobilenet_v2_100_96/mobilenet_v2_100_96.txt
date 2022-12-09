@@ -1,0 +1,30 @@
+Model: "sequential_3"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ rescaling (Rescaling)       (None, None, None, None)  0         
+                                                                 
+ keras_layer_3 (KerasLayer)  (None, 1280)              2257984   
+                                                                 
+ batch_normalization_9 (Batc  (None, 1280)             5120      
+ hNormalization)                                                 
+                                                                 
+ dense_9 (Dense)             (None, 96)                122976    
+                                                                 
+ batch_normalization_10 (Bat  (None, 96)               384       
+ chNormalization)                                                
+                                                                 
+ dense_10 (Dense)            (None, 48)                4656      
+                                                                 
+ batch_normalization_11 (Bat  (None, 48)               192       
+ chNormalization)                                                
+                                                                 
+ dense_11 (Dense)            (None, 7)                 343       
+                                                                 
+=================================================================
+Total params: 2,391,655
+Trainable params: 130,823
+Non-trainable params: 2,260,832
+_________________________________________________________________
+quantization: float
+loss=0.05436369776725769, accuracy=0.9942307472229004
